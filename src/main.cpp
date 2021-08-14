@@ -1,9 +1,11 @@
 #include <iostream>
-#include "lu_parser/driver.hpp"
+#include "driver.hpp"
+
+parser_driver drv;
 
 int main(int argc, char* argv[]){
-    parser_driver p;
-    p.create_ast();
+    drv.load_file(argv[1]);
+    drv.parse();
 
     return EXIT_SUCCESS;
 }

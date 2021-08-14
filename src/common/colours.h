@@ -1,5 +1,5 @@
-#ifndef ECMAPP_COLOURS_
-#define ECMAPP_COLOURS_
+#ifndef LUMIERE_COM_COLOURS
+#define LUMIERE_COM_COLOURS
 
 #define ANSI_RESET "\033[0m"
 #define ANSI_CYAN "\033[36m"

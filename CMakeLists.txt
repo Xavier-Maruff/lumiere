@@ -11,13 +11,17 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/)
-
 add_subdirectory(src/lu_parser)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/lu_parser)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/lu_vm)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/common)
+include_directories(${CMAKE_BINARY_DIR}/src/lu_parser)
+
 #link_libraries(uv)
-link_libraries(lu_parser)
 
 add_executable(lumiere
     src/main.cpp
 )
+
+target_link_libraries(lumiere lu_parser)

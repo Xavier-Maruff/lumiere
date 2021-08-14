@@ -1,0 +1,16 @@
+#ifndef LUMIERE_COM_LOG
+#define LUMIERE_COM_LOG
+
+#include "colours.h"
+#include <iostream>
+
+#ifdef DEBUG
+#define DEBUG_LOG(MSG) std::cout << ANSI_GREEN << "DEBUG: " << ANSI_RESET << (MSG) << std::endl
+#else
+#define DEBUG_LOG(MSG) (void)0
+#endif
+
+#define ERR_LOG(MSG) std::cerr << ANSI_RED << "ERROR: " << ANSI_RESET << (MSG) << std::endl;
+#define INFO_LOG(MSG) std::cout << ANSI_CYAN << "INFO: " << ANSI_RESET << (MSG) << std::endl;
+
+#endif
