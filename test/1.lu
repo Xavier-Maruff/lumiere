@@ -1,1 +1,7 @@
-1 23.4 "test"
+1 23.4 "asdf"
+int a = 5
+a = 10
+lambda test_func = (int a, float b) -> float {
+    a+b
+}
+lambda func_2 = (float x, float b) -> float (x+b)

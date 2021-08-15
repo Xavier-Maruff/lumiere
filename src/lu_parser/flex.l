@@ -6,6 +6,18 @@
 
 extern parser_driver drv;
 
+/*
+
+location step
+literals
+keywords
+identifier
+operands
+EOF
+unrecognised
+
+*/
+
 %}
 
 %option noyywrap nounput noinput batch debug
@@ -13,6 +25,7 @@ extern parser_driver drv;
 int_lit [1-9]+[0-9]*
 flt_lit [0-9]?[1-9]*\.[0-9]*
 string_lit (\"(?:[^"\\]|\\.)*\")|(\'(?:[^'\\]|\\.)*\')
+identifier [_a-zA-Z][_a-zA-Z0-9]*
 
 %{
     #define YY_USER_ACTION loc.columns(yyleng);
@@ -37,7 +50,18 @@ string_lit (\"(?:[^"\\]|\\.)*\")|(\'(?:[^'\\]|\\.)*\')
                         else yytext_str = "";
                         return yy::parser::make_STR_LIT(yytext_str, loc);
                     }
+"lambda"            return yy::parser::make_LAMBDA_KW(loc);
+"return"            return yy::parser::make_RETURN_KW(loc);
+{identifier}        return yy::parser::make_IDENT(std::string(yytext), loc);
+"("                 return yy::parser::make_OPEN_PAREN(loc);
+")"                 return yy::parser::make_CLOSE_PAREN(loc);
+"{"                 return yy::parser::make_OPEN_BRACE(loc);
+"}"                 return yy::parser::make_CLOSE_BRACE(loc);
 "+"                 return yy::parser::make_ADD(loc);
+"=="                return yy::parser::make_EQUIV(loc);
+"="                 return yy::parser::make_ASSIGN(loc);
+","                 return yy::parser::make_COMMA(loc);
+"->"                return yy::parser::make_ARROW(loc);
 <<EOF>>             return yy::parser::make_YYEOF(loc);
 .                   throw yy::parser::syntax_error(loc, "Syntax error: unrecognised token "+std::string(yytext));
 

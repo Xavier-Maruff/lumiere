@@ -13,4 +13,15 @@
 #define ERR_LOG(MSG) std::cerr << ANSI_RED << "ERROR: " << ANSI_RESET << (MSG) << std::endl;
 #define INFO_LOG(MSG) std::cout << ANSI_CYAN << "INFO: " << ANSI_RESET << (MSG) << std::endl;
 
+typedef struct logger {
+    std::ostream& operator()();
+    std::ostream& err();
+
+    logger();
+    ~logger();
+    
+} logger;
+
+extern logger stdlog;
+
 #endif

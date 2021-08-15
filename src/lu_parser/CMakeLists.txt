@@ -16,14 +16,15 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../common)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
 
-find_package(LLVM REQUIRED)
-link_libraries(
-    LLVM
-    LLVMCodeGen
-    LLVMJIT
-    LLVMExecutionEngine
-    LLVMInterpreter
+set(LLVM_PATH "/usr/lib/llvm-10")
+include_directories(${LLVM_PATH}/include)
+
+add_definitions(
+-D__STDC_LIMIT_MACROS
+-D__STDC_CONSTANT_MACROS
 )
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a")
 
 FIND_PACKAGE(FLEX)
 FIND_PACKAGE(BISON)
@@ -42,6 +43,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_library(lu_parser STATIC
     driver.cpp
     ast.cpp
+    llvm_inst.cpp
     ${BISON_bison_parser_OUTPUTS}
     ${FLEX_flex_lexer_OUTPUTS}
 )

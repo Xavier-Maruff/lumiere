@@ -1,0 +1,16 @@
+test_func(int a, float b) -> float {
+    return a*b;
+}
+
+restrict a.length == b.length
+test_func_2(vector<int> a, vector<float> b) -> vector<float> {
+    vector<float> c;
+    iterate a as elem {
+        c[elem.index] = elem.a*b[elem.index];
+    }
+    return c;
+}
+
+int val_1 = test_func(12, 23.1);
+
+

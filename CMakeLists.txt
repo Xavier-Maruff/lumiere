@@ -11,6 +11,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a")
+
 add_subdirectory(src/lu_parser)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/lu_parser)
@@ -18,10 +21,30 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/lu_vm)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/common)
 include_directories(${CMAKE_BINARY_DIR}/src/lu_parser)
 
-#link_libraries(uv)
+find_package( Boost COMPONENTS program_options REQUIRED )
+include_directories( ${Boost_INCLUDE_DIR} )
+link_libraries(${Boost_LIBRARIES})
+
+set(LLVM_PATH "/usr/lib/llvm-10")
+link_directories(${LLVM_PATH}/lib)
+include_directories(${LLVM_PATH}/include)
+
+add_definitions(
+-D__STDC_LIMIT_MACROS
+-D__STDC_CONSTANT_MACROS
+)
 
 add_executable(lumiere
     src/main.cpp
+    src/log.cpp
+    src/cli.cpp
+    src/get_string.cpp
 )
 
-target_link_libraries(lumiere lu_parser)
+target_link_libraries(lumiere
+    lu_parser
+    LLVM-10
+    LLVMCore
+    LLVMCodeGen
+    LLVMSupport
+)
