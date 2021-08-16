@@ -2,9 +2,7 @@
 lambda float my_func (int a, float b, float c) -> {
     return a+b+c
 }
-lambda float ftest (float a, int b) -> {
+lambda float ftest (float a, float b) -> {
     return a+b
 }
-
-lambda float my_func_2(float a, float b) -> a+b
-lambda int asdf(float a, int b) -> a+b
+lambda string test() -> "test"

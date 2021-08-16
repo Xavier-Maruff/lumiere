@@ -13,7 +13,8 @@ llvm::Value* llvm_reduce_value_func::operator()(llvm::Value* lhs, llvm::Value* r
 //contains the compile time types
 type_map_type type_map = {
     TYPE_MAP_ELEM("float", {return llvm::Type::getDoubleTy(ctx);}),
-    TYPE_MAP_ELEM("int", {return llvm::Type::getInt64Ty(ctx);})
+    TYPE_MAP_ELEM("int", {return llvm::Type::getInt64Ty(ctx);}),
+    TYPE_MAP_ELEM("string", {return llvm::Type::getInt8PtrTy(ctx);})
 };
 
 

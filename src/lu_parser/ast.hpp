@@ -107,7 +107,7 @@ class ast_int_expr: public ast_expr{
 };
 
 //string expression
-//TODO: fix this - it doesnt work for some reason
+//represented as an i8*
 class ast_string_expr: public ast_expr{
     public:
     static const expr_node_type string_expr_type;
