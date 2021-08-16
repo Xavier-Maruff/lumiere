@@ -12,8 +12,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a")
-
 add_subdirectory(src/lu_parser)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/lu_parser)
@@ -30,8 +28,10 @@ link_directories(${LLVM_PATH}/lib)
 include_directories(${LLVM_PATH}/include)
 
 add_definitions(
--D__STDC_LIMIT_MACROS
--D__STDC_CONSTANT_MACROS
+    -D_GNU_SOURCE
+    -D__STDC_CONSTANT_MACROS
+    -D__STDC_FORMAT_MACROS
+    -D__STDC_LIMIT_MACROS
 )
 
 add_executable(lumiere
@@ -48,3 +48,5 @@ target_link_libraries(lumiere
     LLVMCodeGen
     LLVMSupport
 )
+
+set_property(TARGET lumiere PROPERTY CXX_STANDARD 14)

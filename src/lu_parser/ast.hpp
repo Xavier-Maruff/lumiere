@@ -11,29 +11,19 @@
 #include <functional>
 
 #include "ast_enums.h"
-
-//reduce a pair of value pointers to one value pointer
-typedef std::function<llvm::Value*(llvm::Value*, llvm::Value*)> llvm_reduce_value_func;
-//map binary expression type -> value pair reduce function
-typedef std::map<std::tuple<expr_node_type, bin_oper, expr_node_type>, llvm_reduce_value_func> bin_oper_reduce_func_map_type;
-//the actual binary operation function map
-extern bin_oper_reduce_func_map_type bin_oper_reduce_func_map;
+#include "cmp_time_extensible.hpp"
 
 //base ast node ~ ABSTRACT
 class ast_node{
     public:
+    std::string name;
+    std::string cmp_node_type;
+
     ast_node();
     virtual ~ast_node() = 0;
 
-};
-
-//code block - not yet implement in parser
-class ast_block: public ast_node{
-    public:
-    std::vector<ast_node*> children;
-
-    ast_block();
-    ~ast_block();
+    //generate the IR
+    virtual llvm::Value* gen_code();
 
 };
 
@@ -45,26 +35,45 @@ class ast_expr: public ast_node{
     ast_expr();
     virtual ~ast_expr();
 
-    //generate the IR
-    virtual llvm::Value* gen_code();
     //get the expression type (see "expr_node_type" enum)
-    virtual expr_node_type get_expr_type();
+    virtual std::string get_expr_type();
+};
+
+//code block - not yet implement in parser
+class ast_block: public ast_node{
+    public:
+    //this should probably be a vector of node pointers, not expr pointers
+    std::vector<std::unique_ptr<ast_node>> children;
+
+    ast_block(std::vector<std::unique_ptr<ast_node>>& children_);
+    ast_block();
+    virtual ~ast_block();
+
+    virtual llvm::Value* gen_code() override;
+};
+
+class ast_func_block: public ast_block{
+    public:
+    std::unique_ptr<ast_expr> return_expr;
+
+    ast_func_block(std::vector<std::unique_ptr<ast_node>>& children_, std::unique_ptr<ast_expr>& return_expr_);
+    ast_func_block(std::unique_ptr<ast_expr>& return_expr_);
+    ~ast_func_block();
+
+    llvm::Value* gen_code() override;
 };
 
 //baked variable expression
 class ast_var_expr: public ast_expr{
     public:
     static const expr_node_type var_expr_type;
-    expr_node_type var_type;
-    //variable name
-    std::string name;
 
     ast_var_expr();
-    ast_var_expr(std::string name_);
+    ast_var_expr(std::string cmp_node_type_, std::string name_);
     virtual ~ast_var_expr();
 
     llvm::Value* gen_code() override;
-    expr_node_type get_expr_type() override;
+    std::string get_expr_type() override;
 };
 
 //float expression
@@ -79,7 +88,7 @@ class ast_flt_expr: public ast_expr{
     virtual ~ast_flt_expr();
 
     llvm::Value* gen_code() override;
-    expr_node_type get_expr_type() override;
+    std::string get_expr_type() override;
 };
 
 //integer expression
@@ -94,10 +103,11 @@ class ast_int_expr: public ast_expr{
     virtual ~ast_int_expr();
     
     llvm::Value* gen_code() override;
-    expr_node_type get_expr_type() override;
+    std::string get_expr_type() override;
 };
 
 //string expression
+//TODO: fix this - it doesnt work for some reason
 class ast_string_expr: public ast_expr{
     public:
     static const expr_node_type string_expr_type;
@@ -109,7 +119,7 @@ class ast_string_expr: public ast_expr{
     virtual ~ast_string_expr();
     
     llvm::Value* gen_code() override;
-    expr_node_type get_expr_type() override;
+    std::string get_expr_type() override;
 };
 
 //binary expression
@@ -121,42 +131,60 @@ class ast_bin_expr: public ast_expr{
     //pointers to adjacent nodes
     std::unique_ptr<ast_expr> lhs;
     std::unique_ptr<ast_expr> rhs;
+    //binary reduction function (derived from types and opcode using binary reduction function map)
+    llvm_reduce_value_func* code_gen_func;
 
     ast_bin_expr();
     ast_bin_expr(bin_oper opcode_, std::unique_ptr<ast_expr>& lhs_, std::unique_ptr<ast_expr>& rhs_);
     virtual ~ast_bin_expr();
 
     llvm::Value* gen_code() override;
-    expr_node_type get_expr_type() override;
+    std::string get_expr_type() override;
 };
 
+
+//TODO: CODEGEN
 
 class ast_func_call_expr: public ast_expr{
     public:
     static const expr_node_type func_call_expr_type;
+    //the function name being called
     std::string callee;
+    //function args
     std::vector<std::unique_ptr<ast_expr>> args;
 
-    ast_func_call_expr();
+    ast_func_call_expr(std::string callee_, std::vector<std::unique_ptr<ast_expr>>& args_);
     virtual ~ast_func_call_expr();
+
+    llvm::Value* gen_code() override;
+    std::string get_expr_type() override;
 };
 
-class ast_func_proto{
+class ast_func_proto: public ast_node{
     public:
-    std::string name;
-    std::vector<std::string> args;
+    //args at dec
+    std::vector<std::unique_ptr<ast_node>> args;
+    //function return type
+    std::string return_type;
 
-    ast_func_proto();
+    ast_func_proto(std::string name_, std::vector<std::unique_ptr<ast_node>>& args_, std::string return_type_);
+    ast_func_proto(std::string name_, std::string return_type_);
     virtual ~ast_func_proto();
+
+    llvm::Function* gen_code();
 };
 
-class ast_func_def{
+class ast_func_def: public ast_node{
     public:
+    //function protype - contains name and return type info
     std::unique_ptr<ast_func_proto> func_proto;
-    std::unique_ptr<ast_expr> func_body;
+    //the function body - expression or func block
+    std::unique_ptr<ast_node> func_body;
 
-    ast_func_def();
+    ast_func_def(std::unique_ptr<ast_func_proto>& func_proto_, std::unique_ptr<ast_node>& func_body_);
     virtual ~ast_func_def();
+
+    llvm::Function* gen_code();
 };
 
 #endif

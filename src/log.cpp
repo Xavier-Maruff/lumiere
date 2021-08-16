@@ -11,6 +11,11 @@ std::ostream& logger::err(){
     return std::cerr;
 }
 
+std::ostream& logger::warn(){
+    std::cout << ANSI_YELLOW << "WARNING: " << ANSI_RESET;
+    return std::cout;
+}
+
 logger::logger(){
     //
 }

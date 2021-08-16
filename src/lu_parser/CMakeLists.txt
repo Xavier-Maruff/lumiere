@@ -20,11 +20,11 @@ set(LLVM_PATH "/usr/lib/llvm-10")
 include_directories(${LLVM_PATH}/include)
 
 add_definitions(
--D__STDC_LIMIT_MACROS
--D__STDC_CONSTANT_MACROS
+    -D_GNU_SOURCE
+    -D__STDC_CONSTANT_MACROS
+    -D__STDC_FORMAT_MACROS
+    -D__STDC_LIMIT_MACROS
 )
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a")
 
 FIND_PACKAGE(FLEX)
 FIND_PACKAGE(BISON)
@@ -32,6 +32,7 @@ FIND_PACKAGE(BISON)
 BISON_TARGET(
     bison_parser bison.y ${CMAKE_CURRENT_BINARY_DIR}/bison.cpp
     COMPILE_FLAGS --report=solved COMPILE_FLAGS --feature=fixit
+    VERBOSE bison_log.txt
 )
 FLEX_TARGET(
     flex_lexer flex.l ${CMAKE_CURRENT_BINARY_DIR}/flex.cpp
@@ -44,6 +45,9 @@ add_library(lu_parser STATIC
     driver.cpp
     ast.cpp
     llvm_inst.cpp
+    cmp_time_extensible.cpp
     ${BISON_bison_parser_OUTPUTS}
     ${FLEX_flex_lexer_OUTPUTS}
 )
+
+set_property(TARGET lu_parser PROPERTY CXX_STANDARD 14)

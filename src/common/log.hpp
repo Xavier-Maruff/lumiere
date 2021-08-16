@@ -16,6 +16,7 @@
 typedef struct logger {
     std::ostream& operator()();
     std::ostream& err();
+    std::ostream& warn();
 
     logger();
     ~logger();

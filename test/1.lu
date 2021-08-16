@@ -1,7 +1,10 @@
-1 23.4 "asdf"
-int a = 5
-a = 10
-lambda test_func = (int a, float b) -> float {
-    a+b
+
+lambda float my_func (int a, float b, float c) -> {
+    return a+b+c
 }
-lambda func_2 = (float x, float b) -> float (x+b)
+lambda float ftest (float a, int b) -> {
+    return a+b
+}
+
+lambda float my_func_2(float a, float b) -> a+b
+lambda int asdf(float a, int b) -> a+b
