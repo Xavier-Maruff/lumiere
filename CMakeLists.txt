@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("Building with DEBUG_LOG expansion")
     add_compile_definitions(DEBUG)
+    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -g")
 endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)

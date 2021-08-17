@@ -38,6 +38,7 @@ identifier [_a-zA-Z][_a-zA-Z0-9]*
 %}
 [ \t\r]+            loc.step();
 \n+                 loc.lines(yyleng); loc.step();
+\/\/.*              {;}
 {int_lit}           {
                         return yy::parser::make_INT_LIT(std::stoi(yytext), loc);
                     }
@@ -62,6 +63,9 @@ identifier [_a-zA-Z][_a-zA-Z0-9]*
 "="                 return yy::parser::make_ASSIGN(loc);
 ","                 return yy::parser::make_COMMA(loc);
 "->"                return yy::parser::make_ARROW(loc);
+"-"                 return yy::parser::make_NEG(loc);
+"*"                 return yy::parser::make_STAR(loc);
+"/"                 return yy::parser::make_SLASH(loc);
 <<EOF>>             return yy::parser::make_YYEOF(loc);
 .                   throw yy::parser::syntax_error(loc, "Syntax error: unrecognised token "+std::string(yytext));
 

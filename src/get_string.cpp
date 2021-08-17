@@ -90,3 +90,16 @@ std::string get_string_err_code(err_codes err_code){
 
     return "UNKNOWN_ERR";
 }
+
+std::string get_string_unary_oper(unary_oper opcode){
+    switch(opcode){
+        case U_OPER_NEG:
+        return "U_OPER_NEG";
+        break;
+
+        default:
+        return "UNKNOWN_UNARY_OPER";
+        break;
+    }
+    return "UNKNOWN_UNARY_OPER";
+}

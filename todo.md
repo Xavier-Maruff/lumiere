@@ -10,3 +10,7 @@
 * Custom types - tie in with structs
 * operator overloading
 * entry point? HOWW
+
+## Currently
+* Only compile time variables are supported
+* string function fuck up

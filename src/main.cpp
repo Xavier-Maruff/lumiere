@@ -17,10 +17,14 @@ int main(int argc, char* argv[]){
             for(std::string source_filename: cli_args.source_filenames){
                 drv.load_file(source_filename);
                 drv.parse();
-                stdlog() << "IR " << source_filename << ":" << std::endl;
-                std::cout << ANSI_GREEN << "-------------------------------" << ANSI_RESET << std::endl;
-                std::cout << drv.get_ir() << std::endl;
-                std::cout << ANSI_GREEN << "-------------------------------" << ANSI_RESET << std::endl;
+                
+                if(cli_args.no_output){
+                    stdlog() << "IR " << source_filename << ":" << std::endl;
+                    std::cout << ANSI_GREEN << "-------------------------------" << ANSI_RESET << std::endl;
+                    std::cout << drv.get_ir() << std::endl;
+                    std::cout << ANSI_GREEN << "-------------------------------" << ANSI_RESET << std::endl;
+                }
+                else drv.write_ir(cli_args.output_filename);
             }
         }
         else drv.parse();

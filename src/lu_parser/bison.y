@@ -15,12 +15,15 @@
     #include <iostream>
     #include <memory>
     class parser_driver;
-
+    
+    using str_pair = std::pair<std::string, std::string>;
+    
     using ast_expr_uptr = std::unique_ptr<ast_expr>;
     using ast_int_expr_uptr = std::unique_ptr<ast_int_expr>;
     using ast_flt_expr_uptr = std::unique_ptr<ast_flt_expr>;
     using ast_string_expr_uptr = std::unique_ptr<ast_string_expr>;
     using ast_bin_expr_uptr = std::unique_ptr<ast_bin_expr>;
+    using ast_unary_expr_uptr = std::unique_ptr<ast_unary_expr>;
     using ast_var_expr_uptr = std::unique_ptr<ast_var_expr>;
     using ast_func_call_expr_uptr = std::unique_ptr<ast_func_call_expr>;
     using ast_func_proto_uptr = std::unique_ptr<ast_func_proto>;
@@ -28,8 +31,6 @@
     using ast_node_uptr = std::unique_ptr<ast_node>;
     using ast_func_block_uptr = std::unique_ptr<ast_func_block>;
     using ast_func_def_uptr = std::unique_ptr<ast_func_def>;
-    
-    using str_pair = std::pair<std::string, std::string>;
 }
 
 %code {
@@ -51,6 +52,10 @@
 
     ast_expr_uptr make_ast_bin_expr_uptr(bin_oper opcode, ast_expr_uptr& lhs, ast_expr_uptr& rhs){
         return ast_bin_expr_uptr(new ast_bin_expr(opcode, lhs, rhs));
+    }
+
+    ast_expr_uptr make_ast_unary_expr_uptr(unary_oper opcode, ast_expr_uptr& target){
+        return ast_unary_expr_uptr(new ast_unary_expr(opcode, target));
     }
 
     ast_var_expr_uptr make_ast_var_expr_uptr(std::string var_type, std::string name){
@@ -84,6 +89,10 @@
     ast_func_def_uptr make_ast_func_def_uptr(ast_func_proto_uptr& func_proto, ast_node_uptr& func_body){
         return ast_func_def_uptr(new ast_func_def(func_proto, func_body));
     }
+
+    ast_func_def_uptr make_ast_func_def_uptr(ast_func_proto_uptr& func_proto, ast_func_block_uptr& func_body){
+        return ast_func_def_uptr(new ast_func_def(func_proto, func_body));
+    }
 }
 
 %param {parser_driver& drv}
@@ -99,7 +108,7 @@
 %token <double> FLT_LIT;
 %token <std::string> STR_LIT;
 %token <std::string> IDENT
-%token ADD "+" MULT "*" NEG "-" DIV "/" MOD "%" OPEN_PAREN "(" CLOSE_PAREN ")"
+%token ADD "+" STAR "*" NEG "-" SLASH "/" MOD "%" OPEN_PAREN "(" CLOSE_PAREN ")"
 %token LAMBDA_KW "lambda" ASSIGN "=" EQUIV "==" COMMA "," ARROW "->" OPEN_BRACE "{"
 %token CLOSE_BRACE "}" RETURN_KW "return"
 
@@ -111,7 +120,7 @@
 %type <std::vector<ast_node_uptr>> decs;
 %type <std::vector<ast_expr_uptr>> lambda_args;
 %type <ast_node_uptr> lambda_body;
-%type <ast_block_uptr> block;
+//%type <ast_block_uptr> block;
 %type <std::vector<ast_node_uptr>> statements;
 %type <ast_node_uptr> statement;
 %type <ast_func_block_uptr> lambda_block;
@@ -120,15 +129,22 @@
 //TODO: write actual printer
 %printer { yyo << $$; } <*>;
 
-%left "+"
+%right IDENT
+%right ASSIGN
+%left ADD NEG
+%left STAR SLASH
+%nonassoc UNEG
 
 %start program
 %%
 
-program: %empty
-        | statements {
-                for(ast_node_uptr& ast_statement: $1){
-                    ast_statement->gen_code();
+program: %empty {
+                stdlog.err() << "Empty program" << std::endl;
+            }
+        | statements{
+                for(auto& a_node: $1){
+                    if(a_node != nullptr) a_node->gen_code();
+                    else stdlog.warn() << "Null program child" << std::endl;
                 }
             };
 
@@ -146,22 +162,25 @@ statement: dec {
             }
         | var_dec ASSIGN expr {
                 //TODO: mutable variables
-                DEBUG_LOG("New assignment to new variable "+$1->name+" of type "+$1->cmp_node_type);
+                DEBUG_LOGL(@1, "Assignment to new variable "+$1->name+" of type "+$1->cmp_node_type);
                 //add to values map
+                //Because vars aren't mutable, any runtime expression gets fucked
                 value_map[$1->name] = $3->gen_code();
                 $$ = std::move($1);
             }
         | IDENT ASSIGN expr {
                 //TODO: this can't do anything until mutable variables are added
-                DEBUG_LOG("(FUTURE) New assignment to variable "+$1);
+                DEBUG_LOGL(@1, "(FUTURE) Assignment to mutable variable "+$1);
             }
         | expr {
                 $$ = std::move($1);
             }
 
+/*
 block: OPEN_BRACE statements CLOSE_BRACE {
                 $$ = make_ast_block_uptr($2);
             }
+*/
 
 decs: dec {
         $$ = std::vector<ast_node_uptr>();
@@ -187,15 +206,15 @@ dec: var_dec {
 var_dec: IDENT IDENT {
                         $$ = make_ast_var_expr_uptr($1, $2);
                         symbol_type_map[$$->name] = $$->cmp_node_type;
-                        DEBUG_LOG("New "+$1+" variable declaration "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
+                        DEBUG_LOGL(@1, $1+" variable declaration "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
                     }
 
 lambda_dec: LAMBDA_KW IDENT IDENT OPEN_PAREN decs CLOSE_PAREN {
-                            DEBUG_LOG("New function "+$3+" returning a "+$2);
+                            DEBUG_LOGL(@1, "Function "+$3+" returning a "+$2);
                             $$ = make_ast_func_proto_uptr($3, $5, $2);
                         }
             | LAMBDA_KW IDENT IDENT OPEN_PAREN CLOSE_PAREN {
-                            DEBUG_LOG("New noarg function "+$3+" returning a "+$2);
+                            DEBUG_LOGL(@1, "Noarg function "+$3+" returning a "+$2);
                             $$ = make_ast_func_proto_uptr($3, $2);
                         }
 
@@ -206,21 +225,21 @@ lambda_def:  lambda_dec ARROW lambda_body {
             //| IDENT ASSIGN OPEN_PAREN decs CLOSE_PAREN ARROW lambda_body TODO:
 
 lambda_body: expr {
-                DEBUG_LOG("New lambda expression");
+                DEBUG_LOGL(@1, "Lambda expression");
                 $$ = std::move($1);
             }
             | lambda_block  {
-                    DEBUG_LOG("New lambda body");
+                    DEBUG_LOGL(@1, "Lambda body");
                     $$ = std::move($1);
                 }
             
 
 lambda_block: OPEN_BRACE statements RETURN_KW expr CLOSE_BRACE {
-                    DEBUG_LOG("New lambda block");
+                    DEBUG_LOGL(@1, "Lambda block");
                     $$ = make_ast_func_block_uptr($2, $4);
                 }
             | OPEN_BRACE RETURN_KW expr CLOSE_BRACE {
-                    DEBUG_LOG("New single ret lambda block");
+                    DEBUG_LOGL(@1, "Single ret lambda block");
                     $$ = make_ast_func_block_uptr($3);
             }
 
@@ -239,13 +258,29 @@ expr: IDENT {
                 $$ = make_ast_string_expr_uptr($1);
                 $$->cmp_node_type = "string";
             }
-    //TODO: other binops
+    | NEG expr %prec UNEG {
+        DEBUG_LOGL(@1, "Unary expression with target type "+$2->cmp_node_type);
+        $$ = make_ast_unary_expr_uptr(U_OPER_NEG, $2);
+    }
+    //TODO: mod
     | expr ADD expr {
                 $$ = make_ast_bin_expr_uptr(OPER_ADD, $1, $3);
-                DEBUG_LOG("New binary expression");
+                DEBUG_LOGL(@1, "Binary expression");
+            }
+    | expr NEG expr {
+                $$ = make_ast_bin_expr_uptr(OPER_SUB, $1, $3);
+                DEBUG_LOGL(@1, "Binary expression");
+            }
+    | expr STAR expr {
+                $$ = make_ast_bin_expr_uptr(OPER_MULT, $1, $3);
+                DEBUG_LOGL(@1, "Binary expression");
+            }
+    | expr SLASH expr {
+                $$ = make_ast_bin_expr_uptr(OPER_DIV, $1, $3);
+                DEBUG_LOGL(@1, "Binary expression");
             }
     | IDENT OPEN_PAREN lambda_args CLOSE_PAREN {
-        DEBUG_LOG("New lambda "+$1+" call, with "+std::to_string($3.size())+" args");
+        DEBUG_LOGL(@1, "Lambda "+$1+" call, with "+std::to_string($3.size())+" args");
         $$ = make_ast_func_call_expr_uptr($1, $3);
     }
 

@@ -29,6 +29,8 @@ class parser_driver{
     void parse();
     //get the generated ir as a string - probably should improve this a bit
     std::string get_ir();
+    //write the generated ir the the output file
+    void write_ir(std::string output_filename);;
 
 };
 

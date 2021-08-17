@@ -63,7 +63,7 @@ class ast_func_block: public ast_block{
     llvm::Value* gen_code() override;
 };
 
-//baked variable expression
+//baked variable expression - TODO: mutable
 class ast_var_expr: public ast_expr{
     public:
     static const expr_node_type var_expr_type;
@@ -74,6 +74,8 @@ class ast_var_expr: public ast_expr{
 
     llvm::Value* gen_code() override;
     std::string get_expr_type() override;
+    //TODO: will be deprecated after mutable vars are added
+    void assign_val(llvm::Value* val);
 };
 
 //float expression
@@ -142,6 +144,22 @@ class ast_bin_expr: public ast_expr{
     std::string get_expr_type() override;
 };
 
+//unary expression
+class ast_unary_expr: public ast_expr{
+    public:
+    //unary operator
+    unary_oper opcode;
+    //pointer to adjacent node
+    std::unique_ptr<ast_expr> target;
+    llvm_reduce_unary_value_func* code_gen_func;
+
+    ast_unary_expr();
+    ast_unary_expr(unary_oper opcode_, std::unique_ptr<ast_expr>& target_);
+    virtual ~ast_unary_expr();
+
+    llvm::Value* gen_code() override;
+    std::string get_expr_type() override;
+};
 
 //TODO: CODEGEN
 
@@ -182,9 +200,16 @@ class ast_func_def: public ast_node{
     std::unique_ptr<ast_node> func_body;
 
     ast_func_def(std::unique_ptr<ast_func_proto>& func_proto_, std::unique_ptr<ast_node>& func_body_);
+    ast_func_def(std::unique_ptr<ast_func_proto>& func_proto_, std::unique_ptr<ast_func_block>& func_body_);
+    //ast_func_def(std::unique_ptr<ast_func_proto>& func_proto_);
     virtual ~ast_func_def();
 
     llvm::Function* gen_code();
 };
+
+
+extern std::unique_ptr<ast_func_proto> main_func_proto;
+extern std::unique_ptr<ast_func_block> main_func_block;
+extern std::unique_ptr<ast_expr> main_func_ret;
 
 #endif

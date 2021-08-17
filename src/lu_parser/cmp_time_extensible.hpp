@@ -22,6 +22,8 @@
 #include "ast_enums.h"
 //reduce a pair of value pointers to one value pointer
 typedef std::function<llvm::Value*(llvm::Value*, llvm::Value*)> reduce_value_func;
+//reduce a single value pointer to a single value pointer
+typedef std::function<llvm::Value*(llvm::Value*)> reduce_unary_value_func;
 
 //wrapper over reduce_value_func with return type information
 typedef struct llvm_reduce_value_func {
@@ -33,12 +35,26 @@ typedef struct llvm_reduce_value_func {
 
 } llvm_reduce_value_func;
 
+//wrapper over reduce_unary_value_func with return type information
+typedef struct llvm_reduce_unary_value_func {
+    reduce_unary_value_func reduce_func;
+    std::string return_type;
+
+    llvm::Value* operator()(llvm::Value*);
+    llvm_reduce_unary_value_func(reduce_unary_value_func reduce_func_, std::string return_type_);
+
+} llvm_reduce_unary_value_func;
+
 //redice value func + return type
 //map binary expression type -> value pair reduce function
 typedef std::map<std::tuple<std::string, bin_oper, std::string>, llvm_reduce_value_func> bin_oper_reduce_func_map_type;
+//map unary expression type -> value reduce function
+typedef std::map<std::pair<unary_oper, std::string>, llvm_reduce_unary_value_func> unary_oper_reduce_func_map_type;
 
 //the actual binary operation function map
 extern bin_oper_reduce_func_map_type bin_oper_reduce_func_map;
+//acutal unary operation function map
+extern unary_oper_reduce_func_map_type unary_oper_reduce_func_map;
 
 //compile time types
 typedef std::map<std::string, std::function<llvm::Type*(llvm::LLVMContext&)>> type_map_type;
@@ -46,6 +62,8 @@ typedef std::map<std::string, std::function<llvm::Type*(llvm::LLVMContext&)>> ty
 extern type_map_type type_map;
 
 extern std::map<std::string, std::string> symbol_type_map;
+extern std::map<std::string, std::vector<std::string>> func_args_type_map;
+
 
 #define TYPE_MAP_ELEM(type_name, func_body) \
 {type_name, [](llvm::LLVMContext& ctx) -> llvm::Type* func_body}
@@ -53,9 +71,6 @@ extern std::map<std::string, std::string> symbol_type_map;
 
 //named values
 extern std::map<std::string, llvm::Value*> value_map;
-
-//throwaway args for node construction
-//class ast_node;
-//extern std::vector<std::unique_ptr<ast_node>> empty_ast_node_vect;
+extern std::map<std::string, llvm::Value*> value_map_buffer;
 
 #endif

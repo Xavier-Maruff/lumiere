@@ -7,7 +7,8 @@
 
 namespace po = boost::program_options;
 
-argparse_ret::argparse_ret():output_filename("lumiere_out"), repl_mode(false){
+argparse_ret::argparse_ret():
+output_filename("lumiere_out"), repl_mode(false), no_output(false){
     //
 }
 
@@ -23,6 +24,7 @@ argparse_ret get_args(int argc, char* argv[]){
         ("help,h", "show this help message")
         ("verbose,v", "increase verbosity")
         ("repl,r", "run the REPL")
+        ("no-output", "print LLVM IR to the console")
         ("output,o", po::value<std::string>(), "output file path")
         ("sources", po::value<std::vector<std::string>>()->multitoken(), "source file paths")
     ;
@@ -60,6 +62,10 @@ argparse_ret get_args(int argc, char* argv[]){
 
     if(vm.count("verbose")){
         retval.verbose = true;
+    }
+
+    if(vm.count("no-output")){
+        retval.no_output = true;
     }
 
     if(vm.count("sources")){

@@ -10,6 +10,11 @@ enum bin_oper {
     OPER_MOD
 };
 
+//unary expression operator types
+enum unary_oper {
+    U_OPER_NEG
+};
+
 //expression ast node types
 enum expr_node_type {
     BASE_EXPR_NODE,
