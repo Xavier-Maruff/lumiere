@@ -57,7 +57,8 @@ extern bin_oper_reduce_func_map_type bin_oper_reduce_func_map;
 extern unary_oper_reduce_func_map_type unary_oper_reduce_func_map;
 
 //compile time types
-typedef std::map<std::string, std::function<llvm::Type*(llvm::LLVMContext&)>> type_map_type;
+typedef std::function<llvm::Type*(llvm::LLVMContext&)> type_transform_func;
+typedef std::map<std::string, type_transform_func> type_map_type;
 //actual compile time type map
 extern type_map_type type_map;
 
@@ -72,5 +73,8 @@ extern std::map<std::string, std::vector<std::string>> func_args_type_map;
 //named values
 extern std::map<std::string, llvm::Value*> value_map;
 extern std::map<std::string, llvm::Value*> value_map_buffer;
+
+//TODO: Adding mutable variables YOU LEFT OFF DOING THIS
+//static llvm::AllocaIns
 
 #endif

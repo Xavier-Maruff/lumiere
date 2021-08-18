@@ -57,8 +57,8 @@ ast_var_expr::ast_var_expr() :
     //
 }
 
-ast_var_expr::ast_var_expr(std::string cmp_node_type_, std::string name_) :
-    ast_expr() {
+ast_var_expr::ast_var_expr(std::string cmp_node_type_, std::string name_, bool is_global_) :
+    ast_expr(), is_global(is_global_) {
     name = name_;
     cmp_node_type = cmp_node_type_;
 }
@@ -67,23 +67,70 @@ ast_var_expr::~ast_var_expr() {
     //
 }
 
+void ast_var_expr::set_init_val(std::unique_ptr<ast_expr>& init_val_){
+    init_val = std::move(init_val_);
+}
+
 llvm::Value* ast_var_expr::gen_code() {
-    //TODO: mutable variables
     llvm::Value* val = value_map[name];
     if (val == nullptr) {
-        stdlog.err() << "Unrecognised variable \"" << name << "\"" << std::endl;
-        return nullptr;
+        llvm::BasicBlock* parent_b = llvm_irbuilder->GetInsertBlock();
+        if(parent_b == nullptr) {
+            is_global = true;
+            //llvm::Constant* init_var_val = gen_code(); 
+            llvm::Constant* constant_expr = llvm::dyn_cast<llvm::Constant>(init_val->gen_code());
+            if(constant_expr == nullptr) {
+                stdlog.err() << "Nullptr returned casting init val to llvm::Constant for global " << name << std::endl;
+                throw PARSE_ERR;
+            }
+            llvm::Value* global_var = create_global_var(name, cmp_node_type, constant_expr);
+            if(global_var == nullptr){
+                stdlog.err() << "Nullptr returned creating global var " << name << std::endl;
+                throw PARSE_ERR;
+            }
+            value_map[name] = global_var;
+            val = global_var;
+        }
+        else {
+            is_global = false;
+            llvm::AllocaInst* var_alloca = insert_alloca_at_entry(parent_b, name, cmp_node_type);
+
+            if(var_alloca == nullptr) {
+                stdlog.err() << "Variable " << name << " allocation failed" << std::endl;
+                throw PARSE_ERR;
+            }
+
+            value_map[name] = var_alloca;
+            val = var_alloca;
+        
+            llvm::Value* init_var_val = init_val->gen_code();
+
+            if(init_var_val == nullptr){
+                stdlog.err() << "Null initial value for variable " << name << std::endl;
+                throw PARSE_ERR;
+            }
+
+            llvm_irbuilder->CreateStore(init_var_val, val);
+        }
     }
-    return val;
+    //if(is_global) return val; 
+    //else return llvm_irbuilder->CreateLoad(val, name.c_str());
+    type_transform_func* type_ptr = get_llvm_type(cmp_node_type);
+    if(type_ptr == nullptr) {
+        stdlog.err() << "Variable " << name << " type (" << cmp_node_type << ") not recognised" << std::endl;
+        throw PARSE_ERR;
+    }
+    llvm::Type* var_type = type_ptr->operator()(*llvm_context);
+    if(var_type == nullptr){
+        stdlog.err() << "Error retrieving variable " << name << " type" << std::endl;
+        throw PARSE_ERR;
+    }
+    return llvm_irbuilder->CreateLoad(var_type, val, name.c_str());
+    
 }
 
 std::string ast_var_expr::get_expr_type() {
     return "var";
-}
-
-//TODO: this will be deprecated once mutable vars are introduced
-void ast_var_expr::assign_val(llvm::Value* val){
-    value_map[name] = val;
 }
 
 const expr_node_type ast_var_expr::var_expr_type = VAR_EXPR_NODE;
@@ -233,9 +280,57 @@ std::string ast_bin_expr::get_expr_type() {
 
 const expr_node_type ast_bin_expr::bin_expr_type = BIN_EXPR_NODE;
 
+//binary expression with pre-gen lhs
+ast_lhs_ptr_bin_expr::ast_lhs_ptr_bin_expr(bin_oper opcode_, std::string lhs_, std::unique_ptr<ast_expr>& rhs_):
+ast_bin_expr(), symbol(lhs_){
+    rhs = std::move(rhs_);
+    if(rhs == nullptr){
+        stdlog.err() << "RHS nullptr as ast_lhs_ptr_bin_expr constructor" << std::endl;
+        throw PARSE_ERR;
+    }
+}
+
 //Unary expression
 ast_unary_expr::ast_unary_expr():
 ast_expr(), opcode(U_OPER_NEG), target(nullptr){
+    //
+}
+
+//generate code - skip lhs codegen
+llvm::Value* ast_lhs_ptr_bin_expr::gen_code(){
+    //get the type of the left arg
+    auto lhs_cmp_node_type_iter = symbol_type_map.find(symbol);
+    if(lhs_cmp_node_type_iter == symbol_type_map.end()){
+        stdlog.err() << "Symbol " << symbol << " has no registered type" << std::endl;
+        throw PARSE_ERR;
+    }
+    std::string lhs_cmp_node_type = lhs_cmp_node_type_iter->second;
+
+    //get the iterator pointing to the function that will produce the correct value pointer
+    auto code_gen_func_iter = bin_oper_reduce_func_map.find({ lhs_cmp_node_type, opcode, rhs->cmp_node_type });
+    //check if the operation is valid
+    if (code_gen_func_iter == bin_oper_reduce_func_map.end()) {
+        //No valid operation for the two adjacent nodes
+        stdlog.err() << "No " << get_string_bin_oper(opcode) << " operation for nodes "
+            << lhs_cmp_node_type
+            << " and " << rhs->cmp_node_type << std::endl;
+        //throw err
+        throw PARSE_ERR;
+    }
+    
+    code_gen_func = &code_gen_func_iter->second;
+    cmp_node_type = code_gen_func_iter->second.return_type;
+
+    //get the value of the two adjacent nodes
+    llvm::Value* lhs_val_ptr = value_map[symbol];
+    //if(lhs_val_ptr == nullptr) return nullptr;
+    llvm::Value* rhs_val_ptr = rhs->gen_code();
+    if (lhs_val_ptr == nullptr || rhs_val_ptr == nullptr) return nullptr;
+    //generate the value pointer
+    return code_gen_func->operator()(lhs_val_ptr, rhs_val_ptr);
+}
+
+ast_lhs_ptr_bin_expr::~ast_lhs_ptr_bin_expr(){
     //
 }
 
@@ -397,9 +492,15 @@ llvm::Function* ast_func_def::gen_code() {
     //might do an outer join, then revert after
     value_map_buffer.clear();
     value_map_buffer = value_map;
+
+    std::vector<std::string> arg_types = func_args_type_map[func_proto->name];
     //value_map.clear();
+    size_t arg_index = 0;
     for (auto& arg : llvm_f->args()) {
-        value_map[std::string(arg.getName())] = &arg;
+        llvm::AllocaInst* arg_alloca = insert_alloca_at_entry(llvm_f, arg.getName(), arg_types[arg_index]);
+        llvm_irbuilder->CreateStore(&arg, arg_alloca);
+        value_map[std::string(arg.getName())] = arg_alloca;
+        arg_index++;
     }
 
     //maybe should throw error

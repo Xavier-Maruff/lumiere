@@ -10,6 +10,8 @@
     #include "colours.h"
     #include "ast.hpp"
     #include "log.hpp"
+    #include "llvm_inst.hpp"
+    #include "err_codes.h"
     #include <string>
     #include <sstream>
     #include <iostream>
@@ -23,6 +25,7 @@
     using ast_flt_expr_uptr = std::unique_ptr<ast_flt_expr>;
     using ast_string_expr_uptr = std::unique_ptr<ast_string_expr>;
     using ast_bin_expr_uptr = std::unique_ptr<ast_bin_expr>;
+    using ast_lhs_ptr_bin_expr_uptr = std::unique_ptr<ast_lhs_ptr_bin_expr>;
     using ast_unary_expr_uptr = std::unique_ptr<ast_unary_expr>;
     using ast_var_expr_uptr = std::unique_ptr<ast_var_expr>;
     using ast_func_call_expr_uptr = std::unique_ptr<ast_func_call_expr>;
@@ -52,6 +55,10 @@
 
     ast_expr_uptr make_ast_bin_expr_uptr(bin_oper opcode, ast_expr_uptr& lhs, ast_expr_uptr& rhs){
         return ast_bin_expr_uptr(new ast_bin_expr(opcode, lhs, rhs));
+    }
+
+    ast_expr_uptr make_ast_lhs_ptr_bin_expr_uptr(bin_oper opcode, std::string lhs, ast_expr_uptr& rhs){
+        return ast_lhs_ptr_bin_expr_uptr(new ast_lhs_ptr_bin_expr(opcode, lhs, rhs));
     }
 
     ast_expr_uptr make_ast_unary_expr_uptr(unary_oper opcode, ast_expr_uptr& target){
@@ -160,18 +167,6 @@ statements: statement {
 statement: dec {
                 $$ = std::move($1);
             }
-        | var_dec ASSIGN expr {
-                //TODO: mutable variables
-                DEBUG_LOGL(@1, "Assignment to new variable "+$1->name+" of type "+$1->cmp_node_type);
-                //add to values map
-                //Because vars aren't mutable, any runtime expression gets fucked
-                value_map[$1->name] = $3->gen_code();
-                $$ = std::move($1);
-            }
-        | IDENT ASSIGN expr {
-                //TODO: this can't do anything until mutable variables are added
-                DEBUG_LOGL(@1, "(FUTURE) Assignment to mutable variable "+$1);
-            }
         | expr {
                 $$ = std::move($1);
             }
@@ -279,6 +274,27 @@ expr: IDENT {
                 $$ = make_ast_bin_expr_uptr(OPER_DIV, $1, $3);
                 DEBUG_LOGL(@1, "Binary expression");
             }
+    | var_dec ASSIGN expr {
+                DEBUG_LOGL(@1, "Assignment to new variable "+$1->name+" of type "+$1->cmp_node_type);
+                $1->set_init_val($3);
+                $$ = std::move($1);
+            }
+    | IDENT ASSIGN expr {
+            DEBUG_LOGL(@1, "Assignment to mutable variable "+$1);
+            /*auto var_iter = symbol_type_map.find($1);
+            if(var_iter == symbol_type_map.end()) {
+                //TODO: error logging with better 
+                stdlog.err() << "Assignment to uninitialised variable " << $1 << std::endl;
+                throw PARSE_ERR;
+            }
+            ast_expr_uptr temp_var = make_ast_var_expr_uptr(var_iter->second, $1);*/
+            //llvm::Value* var_ptr = value_map[$1];
+            //if(var_ptr == nullptr){
+            //    stdlog.err() << "Variable " << $1 << " has not associated alloca instance" << std::endl;
+            //    throw PARSE_ERR;
+            //}
+            $$ = make_ast_lhs_ptr_bin_expr_uptr(OPER_ASSIGN, $1, $3);
+        }
     | IDENT OPEN_PAREN lambda_args CLOSE_PAREN {
         DEBUG_LOGL(@1, "Lambda "+$1+" call, with "+std::to_string($3.size())+" args");
         $$ = make_ast_func_call_expr_uptr($1, $3);
@@ -300,7 +316,7 @@ lambda_args: expr {
 
 void yy::parser::error (const location_type& l, const std::string& m){
     std::stringstream msg("At location: ");
-    msg << l << ": " << m;
+    msg << ANSI_CYAN << l << ANSI_RESET << ": " << m;
     stdlog.err() << msg.rdbuf() << std::endl;
 }
 

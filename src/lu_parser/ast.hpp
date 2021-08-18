@@ -67,16 +67,24 @@ class ast_func_block: public ast_block{
 class ast_var_expr: public ast_expr{
     public:
     static const expr_node_type var_expr_type;
+    std::unique_ptr<ast_expr> init_val;
+    bool is_global;
 
     ast_var_expr();
-    ast_var_expr(std::string cmp_node_type_, std::string name_);
+    ast_var_expr(std::string cmp_node_type_, std::string name_, bool is_global_ = false);
     virtual ~ast_var_expr();
 
     llvm::Value* gen_code() override;
     std::string get_expr_type() override;
     //TODO: will be deprecated after mutable vars are added
-    void assign_val(llvm::Value* val);
+    void set_init_val(std::unique_ptr<ast_expr>& init_val_);
 };
+
+
+//TODO: NO - this should be a binop - YOU WERE DOING THIS
+//class ast_assign_expr: public ast_expr{
+    //TODO:
+//};
 
 //float expression
 class ast_flt_expr: public ast_expr{
@@ -144,6 +152,17 @@ class ast_bin_expr: public ast_expr{
     std::string get_expr_type() override;
 };
 
+class ast_lhs_ptr_bin_expr: public ast_bin_expr{
+    public:
+    std::string symbol;
+
+    //pregen symbol
+    ast_lhs_ptr_bin_expr(bin_oper opcode_, std::string lhs_, std::unique_ptr<ast_expr>& rhs_);
+    virtual ~ast_lhs_ptr_bin_expr();
+
+    llvm::Value* gen_code() override;
+};
+
 //unary expression
 class ast_unary_expr: public ast_expr{
     public:
@@ -207,9 +226,5 @@ class ast_func_def: public ast_node{
     llvm::Function* gen_code();
 };
 
-
-extern std::unique_ptr<ast_func_proto> main_func_proto;
-extern std::unique_ptr<ast_func_block> main_func_block;
-extern std::unique_ptr<ast_expr> main_func_ret;
 
 #endif

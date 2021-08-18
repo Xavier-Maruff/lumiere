@@ -1,13 +1,15 @@
+float glob = 12.0
 lambda float ftest1(float a) -> -a*2.0+12.0
 lambda float ftest2(float a) -> a*2.0+-3.0/2.0
 lambda float ftest3(float a) -> a-12.0
 lambda float ftest4(float a, float y, int p) -> {return a*p-p*y+a/-y}
-float er = ftest2(1.0)
-lambda float asdf() -> ftest1(1.0)
-lambda float ftest5(float a, int b) -> {
-    float c = ftest1(a)
-    return ftest4(a, c, b)
-    //return 1.0
+lambda float ftest5(float a) -> {
+    return ftest1(ftest4(a, 1.0123, 200))+glob
+}
+lambda float ftest6(float a) -> {
+    float asd = a
+    asd = 2.0
+    return asd
 }
 lambda string stest1(string a) -> a
 lambda string stest2() -> "my name jeff"

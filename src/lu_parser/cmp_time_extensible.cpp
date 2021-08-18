@@ -106,6 +106,23 @@ bin_oper_reduce_func_map_type bin_oper_reduce_func_map = {
         return llvm_irbuilder->CreateFDiv(lhs, rhs, "addtmp");
     }, "float"}}
     */
+
+   {{"float", OPER_ASSIGN, "int"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        //return llvm_irbuilder->CreateFDiv(lhs, llvm_irbuilder->CreateSIToFP(rhs, type_map["float"](*llvm_context)), "addtmp");
+        return llvm_irbuilder->CreateStore(rhs, llvm_irbuilder->CreateSIToFP(lhs, type_map["float"](*llvm_context)));
+    }, "float"}},
+    {{"int", OPER_ASSIGN, "float"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        //return llvm_irbuilder->CreateFDiv(llvm_irbuilder->CreateSIToFP(lhs, type_map["float"](*llvm_context)), rhs, "addtmp");
+        return llvm_irbuilder->CreateStore(rhs, llvm_irbuilder->CreateFPToSI(lhs, type_map["float"](*llvm_context)));
+    }, "float"}},
+    {{"int", OPER_ASSIGN, "int"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        //return llvm_irbuilder->CreateSDiv(lhs, rhs, "addtmp");
+        return llvm_irbuilder->CreateStore(rhs, lhs);
+    }, "int"}},
+    {{"float", OPER_ASSIGN, "float"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        //return llvm_irbuilder->CreateFDiv(lhs, rhs, "addtmp");
+        return llvm_irbuilder->CreateStore(rhs, lhs);
+    }, "float"}},
 };
 
 unary_oper_reduce_func_map_type unary_oper_reduce_func_map = {

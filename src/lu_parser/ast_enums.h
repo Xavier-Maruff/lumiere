@@ -7,7 +7,8 @@ enum bin_oper {
     OPER_MULT,
     OPER_SUB,
     OPER_DIV,
-    OPER_MOD
+    OPER_MOD,
+    OPER_ASSIGN
 };
 
 //unary expression operator types
