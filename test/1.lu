@@ -16,7 +16,7 @@ lambda float ftest6(float a) -> {
     return asd
 }
 
-//check expression grouping
+//check expression grouping, global assignment
 lambda float ftest7(float q) -> {
     glob = 10.0
     return (q+2)*3
