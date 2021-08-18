@@ -3,6 +3,7 @@
 
 #include "colours.h"
 #include <iostream>
+#include <sstream>
 
 #ifdef DEBUG
 #define DEBUG_LOG(MSG) std::cout << ANSI_GREEN << "DEBUG: " << ANSI_RESET << (MSG) << std::endl
@@ -16,12 +17,19 @@
 #define INFO_LOG(MSG) std::cout << ANSI_CYAN << "INFO: " << ANSI_RESET << (MSG) << std::endl;
 
 typedef struct logger {
-    std::ostream& operator()();
+
+    bool is_verbose = false;
+    bool suppress_warnings = false;
+
+    std::ostream& operator()(bool override_verbose = false);
     std::ostream& err();
     std::ostream& warn();
 
     logger();
     ~logger();
+
+    private:
+    std::stringstream dummy;
     
 } logger;
 

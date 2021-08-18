@@ -400,7 +400,6 @@ ast_func_call_expr::~ast_func_call_expr() {
 llvm::Value* ast_func_call_expr::gen_code() {
     llvm::Function* f_callee = llvm_module->getFunction(callee);
     if (f_callee == nullptr) {
-        //TODO: add line no from yy::parser
         stdlog.err() << "Function \"" << callee << "\" not recognised" << std::endl;
         return nullptr;
     }

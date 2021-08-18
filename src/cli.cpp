@@ -8,7 +8,7 @@
 namespace po = boost::program_options;
 
 argparse_ret::argparse_ret():
-output_filename("lumiere_out"), repl_mode(false), no_output(false){
+output_filename("out.ll"), repl_mode(false), no_output(false), suppress_warnings(false), verbose(false){
     //
 }
 
@@ -25,6 +25,7 @@ argparse_ret get_args(int argc, char* argv[]){
         ("verbose,v", "increase verbosity")
         ("repl,r", "run the REPL")
         ("no-output", "print LLVM IR to the console")
+        ("suppress-warnings", "Don't show any warnings")
         ("output,o", po::value<std::string>(), "output file path")
         ("sources", po::value<std::vector<std::string>>()->multitoken(), "source file paths")
     ;
@@ -56,17 +57,10 @@ argparse_ret get_args(int argc, char* argv[]){
         throw CLI_INVALID_ARGS_ERR;
     }
 
-    if(vm.count("repl")){
-        retval.repl_mode = true;
-    }
-
-    if(vm.count("verbose")){
-        retval.verbose = true;
-    }
-
-    if(vm.count("no-output")){
-        retval.no_output = true;
-    }
+    if(vm.count("repl")) retval.repl_mode = true;
+    if(vm.count("verbose")) retval.verbose = true;
+    if(vm.count("no-output")) retval.no_output = true;
+    if(vm.count("suppress-warnings")) retval.suppress_warnings = true;
 
     if(vm.count("sources")){
         retval.source_filenames = vm["sources"].as<std::vector<std::string>>();

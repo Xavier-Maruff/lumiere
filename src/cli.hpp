@@ -8,6 +8,7 @@ typedef struct argparse_ret {
     bool verbose;
     bool repl_mode;
     bool no_output;
+    bool suppress_warnings;
     std::vector<std::string> source_filenames;
     std::string output_filename;
 

@@ -1,9 +1,11 @@
 #include "log.hpp"
 #include "colours.h"
 
-std::ostream& logger::operator()(){
+std::ostream& logger::operator()(bool override_verbose){
+    if(!is_verbose && !override_verbose) return dummy;
     std::clog << ANSI_CYAN << "INFO: " << ANSI_RESET;
     return std::clog;
+    
 }
 
 std::ostream& logger::err(){
@@ -12,6 +14,7 @@ std::ostream& logger::err(){
 }
 
 std::ostream& logger::warn(){
+    if(suppress_warnings) return dummy;
     std::cout << ANSI_YELLOW << "WARNING: " << ANSI_RESET;
     return std::cout;
 }

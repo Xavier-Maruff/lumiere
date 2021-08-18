@@ -11,8 +11,13 @@ parser_driver drv;
 int main(int argc, char* argv[]){
     try{
         argparse_ret cli_args = get_args(argc, argv);
+
         drv.is_repl = cli_args.repl_mode;
         drv.is_verbose = cli_args.verbose;
+
+        stdlog.is_verbose = cli_args.verbose;
+        stdlog.suppress_warnings = cli_args.suppress_warnings;
+
         if(!drv.is_repl){
             for(std::string source_filename: cli_args.source_filenames){
                 drv.load_file(source_filename);
@@ -20,9 +25,7 @@ int main(int argc, char* argv[]){
                 
                 if(cli_args.no_output){
                     stdlog() << "IR " << source_filename << ":" << std::endl;
-                    std::cout << ANSI_GREEN << "-------------------------------" << ANSI_RESET << std::endl;
                     std::cout << drv.get_ir() << std::endl;
-                    std::cout << ANSI_GREEN << "-------------------------------" << ANSI_RESET << std::endl;
                 }
                 else drv.write_ir(cli_args.output_filename);
             }

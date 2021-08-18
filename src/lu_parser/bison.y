@@ -225,7 +225,6 @@ lambda_dec: LAMBDA_KW IDENT IDENT OPEN_PAREN decs CLOSE_PAREN {
 lambda_def:  lambda_dec ARROW lambda_body {
                     //TODO:
                     $$ = make_ast_func_def_uptr($1, $3);
-                    std::cout << std::endl << std::endl;
                 }
             //| IDENT ASSIGN OPEN_PAREN decs CLOSE_PAREN ARROW lambda_body TODO:
 
