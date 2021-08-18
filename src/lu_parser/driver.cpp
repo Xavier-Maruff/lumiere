@@ -23,13 +23,12 @@ parser_driver::~parser_driver(){
 
 //initialize the location
 void parser_driver::load_file(std::string filename_){
-    try{
-        filename = filename_;
-        loc.initialize(&filename);
-        DEBUG_LOG("Checked source file");
-    }
-    catch(std::exception& e) {
-        stdlog.err() << "Could not load file" << std::endl;
+    filename = filename_;
+    loc.initialize(&filename);
+    std::ifstream file_check(filename);
+    if(!file_check.is_open()){
+        stdlog.err() << "Could not open source file " << filename << std::endl;
+        throw FILE_OPEN_ERR;
     }
 }
 

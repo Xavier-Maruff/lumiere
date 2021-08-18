@@ -29,7 +29,7 @@ int main(int argc, char* argv[]){
         }
         else drv.parse();
     } catch(err_codes err_code){
-        stdlog.err() << "Error code " << get_string_err_code(err_code) << " was thrown" << std::endl;
+        stdlog.err() << get_string_err_code(err_code) << std::endl;
         return err_code;
     }
     return EXIT_SUCCESS;
