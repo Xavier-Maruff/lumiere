@@ -141,6 +141,7 @@
 %left ADD NEG
 %left STAR SLASH
 %nonassoc UNEG
+%nonassoc EXPR_GROUP
 
 %start program
 %%
@@ -168,8 +169,12 @@ statement: dec {
                 $$ = std::move($1);
             }
         | expr {
-                $$ = std::move($1);
-            }
+                    $$ = std::move($1);
+                }
+            | lambda_def {
+                    $$ = std::move($1);
+                    //$$->gen_code();
+                }
 
 /*
 block: OPEN_BRACE statements CLOSE_BRACE {
@@ -193,16 +198,20 @@ dec: var_dec {
             $$ = std::move($1);
             //$$->gen_code();
         }
-    | lambda_def {
-            $$ = std::move($1);
-            //$$->gen_code();
-        }
 
-var_dec: IDENT IDENT {
+var_dec: IDENT IDENT /*%prec DECL_TOK*/{
+                        //DEBUG_LOGL(@1, "Assignment to new variable "+$2+" of type "+$1);
                         $$ = make_ast_var_expr_uptr($1, $2);
                         symbol_type_map[$$->name] = $$->cmp_node_type;
                         DEBUG_LOGL(@1, $1+" variable declaration "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
-                    }
+                }
+        | IDENT IDENT ASSIGN expr{
+                //DEBUG_LOGL(@1, "Assignment to new variable "+$2+" of type "+$1);
+                $$ = make_ast_var_expr_uptr($1, $2);
+                symbol_type_map[$$->name] = $$->cmp_node_type;
+                $$->set_init_val($4);
+                DEBUG_LOGL(@1, $1+" variable declaration "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
+            }
 
 lambda_dec: LAMBDA_KW IDENT IDENT OPEN_PAREN decs CLOSE_PAREN {
                             DEBUG_LOGL(@1, "Function "+$3+" returning a "+$2);
@@ -216,13 +225,14 @@ lambda_dec: LAMBDA_KW IDENT IDENT OPEN_PAREN decs CLOSE_PAREN {
 lambda_def:  lambda_dec ARROW lambda_body {
                     //TODO:
                     $$ = make_ast_func_def_uptr($1, $3);
+                    std::cout << std::endl << std::endl;
                 }
             //| IDENT ASSIGN OPEN_PAREN decs CLOSE_PAREN ARROW lambda_body TODO:
 
 lambda_body: expr {
-                DEBUG_LOGL(@1, "Lambda expression");
-                $$ = std::move($1);
-            }
+                    DEBUG_LOGL(@1, "Lambda expression");
+                    $$ = std::move($1);
+                }
             | lambda_block  {
                     DEBUG_LOGL(@1, "Lambda body");
                     $$ = std::move($1);
@@ -274,11 +284,11 @@ expr: IDENT {
                 $$ = make_ast_bin_expr_uptr(OPER_DIV, $1, $3);
                 DEBUG_LOGL(@1, "Binary expression");
             }
-    | var_dec ASSIGN expr {
+    /*| var_dec ASSIGN expr {
                 DEBUG_LOGL(@1, "Assignment to new variable "+$1->name+" of type "+$1->cmp_node_type);
                 $1->set_init_val($3);
                 $$ = std::move($1);
-            }
+            }*/
     | IDENT ASSIGN expr {
             DEBUG_LOGL(@1, "Assignment to mutable variable "+$1);
             /*auto var_iter = symbol_type_map.find($1);
@@ -295,10 +305,16 @@ expr: IDENT {
             //}
             $$ = make_ast_lhs_ptr_bin_expr_uptr(OPER_ASSIGN, $1, $3);
         }
+	//function call
     | IDENT OPEN_PAREN lambda_args CLOSE_PAREN {
         DEBUG_LOGL(@1, "Lambda "+$1+" call, with "+std::to_string($3.size())+" args");
         $$ = make_ast_func_call_expr_uptr($1, $3);
     }
+	//grouping expressions - currently fucking everything up
+    | OPEN_PAREN expr %prec EXPR_GROUP CLOSE_PAREN {
+			DEBUG_LOGL(@1, "Grouped expression");
+            $$ = std::move($2);
+       }
 
 lambda_args: expr {
                 $$ = std::vector<ast_expr_uptr>();
@@ -315,8 +331,9 @@ lambda_args: expr {
 %%
 
 void yy::parser::error (const location_type& l, const std::string& m){
-    std::stringstream msg("At location: ");
-    msg << ANSI_CYAN << l << ANSI_RESET << ": " << m;
+    std::stringstream msg;
+    msg << ANSI_CYAN << l << ANSI_RESET << "\t" << m;
     stdlog.err() << msg.rdbuf() << std::endl;
+    throw PARSE_ERR;
 }
 

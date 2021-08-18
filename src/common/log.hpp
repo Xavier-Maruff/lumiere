@@ -6,7 +6,7 @@
 
 #ifdef DEBUG
 #define DEBUG_LOG(MSG) std::cout << ANSI_GREEN << "DEBUG: " << ANSI_RESET << (MSG) << std::endl
-#define DEBUG_LOGL(LOC, MSG) std::cout << ANSI_CYAN "(" << (LOC) << ") " << ANSI_RESET << (MSG) << std::endl
+#define DEBUG_LOGL(LOC, MSG) std::cout << ANSI_CYAN "(" << (LOC) << ")\t" << ANSI_RESET << (MSG) << std::endl
 #else
 #define DEBUG_LOG(MSG) (void)0
 #define DEBUG_LOGL(LOC, MSG) (void)0

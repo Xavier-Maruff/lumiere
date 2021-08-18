@@ -54,6 +54,10 @@ std::string get_string_bin_oper(bin_oper opcode){
         return "OPER_MOD";
         break;
 
+        case OPER_ASSIGN:
+        return "OPER_ASSIGN";
+        break;
+
         default:
         return "INVALID_OPCODE";
         break;

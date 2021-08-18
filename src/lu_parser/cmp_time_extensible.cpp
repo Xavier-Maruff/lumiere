@@ -1,5 +1,6 @@
 #include "cmp_time_extensible.hpp"
 #include "llvm_inst.hpp"
+#include "log.hpp"
 
 #include <llvm/Transforms/Utils/IntegerDivision.h>
 
@@ -36,15 +37,19 @@ type_map_type type_map = {
 bin_oper_reduce_func_map_type bin_oper_reduce_func_map = {
     //LHS + RHS
     {{"float", OPER_ADD, "int"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        stdlog() << ("Creating fadd of float/int") << std::endl;
         return llvm_irbuilder->CreateFAdd(lhs, llvm_irbuilder->CreateSIToFP(rhs, type_map["float"](*llvm_context)), "addtmp");
     }, "float"}},
     {{"int", OPER_ADD, "float"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        stdlog() << ("Creating fadd of int/float") << std::endl;
         return llvm_irbuilder->CreateFAdd(llvm_irbuilder->CreateSIToFP(lhs, type_map["float"](*llvm_context)), rhs, "addtmp");
     }, "float"}},
     {{"int", OPER_ADD, "int"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        stdlog() << ("Creating fadd of int/int") << std::endl;
         return llvm_irbuilder->CreateAdd(lhs, rhs, "addtmp");
     }, "int"}},
     {{"float", OPER_ADD, "float"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        stdlog() << ("Creating fadd of float/float") << std::endl;
         return llvm_irbuilder->CreateFAdd(lhs, rhs, "addtmp");
     }, "float"}},
 

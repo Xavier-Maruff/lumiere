@@ -14,6 +14,7 @@ extern "C" {
     double ftest4(double, double, signed long);
     double ftest5(double);
     double ftest6(double);
+    double ftest7(double);
 
     const char* stest1(const char*);
     const char* stest2();
@@ -27,12 +28,8 @@ double ftest2_check(double a) { return a * 2.0 + -3.0 / 2.0; }
 double ftest3_check(double a) { return a - 12.0; }
 double ftest4_check(double a, double y, signed long p) { return a * p - p * y + a / -y; }
 double ftest5_check(double a) { return ftest1(ftest4(a, 1.0123, 200))+12.0; }
-double ftest6_check(double a) {return 2;}
-
-/*
-char* stest1_check(char* a){
-    return ("my name jeff";
-}*/
+double ftest6_check(double a) {return a;}
+double ftest7_check(double a) {return (a+2)*3;}
 
 
 //Run funcs, check match
@@ -46,6 +43,9 @@ char* stest1_check(char* a){
 #include <memory>
 
 #define MAX_STR_LEN 100
+
+float total_tests = 0;
+float total_passed = 0;
 
 std::string passed, failed;
 
@@ -74,13 +74,16 @@ int lev_dist(std::string s1, std::string s2) {
         }
     }
     return dist[l2][l1];
+    delete[] dist;
 }
 
-inline std::string check_res(std::string actual, std::string expected) {
+std::string check_res(std::string actual, std::string expected) {
     int lev_dist_cmp = lev_dist(actual, expected);
     std::stringstream lev_dist_stream;
     lev_dist_stream << std::setfill('0') << std::setw(3) << lev_dist_cmp;
-    if (actual == expected || lev_dist_cmp < 5) {
+    total_tests++;
+    if (actual == expected || lev_dist_cmp <= (actual.size()/3)) {
+        total_passed++;
         return passed + " | " + lev_dist_stream.str() + (actual == expected ? "" : " (within bounds: " + expected + ", " + actual + ")");
     }
     else return failed + " | " + lev_dist_stream.str() + " (expected \"" + expected + "\", got \"" + actual + "\")";
@@ -116,6 +119,10 @@ int main(int argc, char* argv[]) {
     push_string<double>(actual, ftest5(-1.0));
     push_string<double>(actual, ftest6(1.0));
     push_string<double>(actual, ftest6(-1.0));
+    push_string<double>(actual, ftest7(1.0));
+    push_string<double>(actual, ftest7(-1.0));
+    push_string<double>(actual, ftest7(12.56));
+    push_string<double>(actual, ftest7(-12.56));
 
     //string tests
     actual.emplace_back(stest1("test"));
@@ -136,6 +143,10 @@ int main(int argc, char* argv[]) {
     push_string<double>(expected, ftest5_check(-1.0));
     push_string<double>(expected, ftest6_check(1.0));
     push_string<double>(expected, ftest6_check(-1.0));
+    push_string<double>(expected, ftest7_check(1.0));
+    push_string<double>(expected, ftest7_check(-1.0));
+    push_string<double>(expected, ftest7_check(12.56));
+    push_string<double>(expected, ftest7_check(-12.56));
     //string truths
     expected.push_back("test");
     expected.push_back("my name jeff");
@@ -144,14 +155,18 @@ int main(int argc, char* argv[]) {
 
     std::cout << std::endl << "\tTest Results" << std::endl;
     std::cout << "\t===============================" << std::endl;
-    std::cout << "\t  # | status | lev dist " << std::endl;
+    std::cout << "\t### | status | lev dist " << std::endl;
     std::cout << "\t===============================" << std::endl;
     for (int index = 0; index < actual.size(); index++) {
         std::cout << ANSI_CYAN << "\t" << std::setfill('0') << std::setw(3) << index << ANSI_RESET
             << " | " << check_res(actual[index], expected[index]) << std::endl;
     }
     std::cout << "\t===============================" << std::endl;
-    std::cout << std::endl;
+
+    float passed_perc = (total_passed/total_tests)*100;
+
+    std::cout << "\tTotal passed: " << (passed_perc >= 50 ? ANSI_GREEN : ANSI_RED)
+    << passed_perc << "%" << ANSI_RESET << std::endl << std::endl;
 
     return 0;
 }

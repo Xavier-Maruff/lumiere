@@ -78,7 +78,12 @@ llvm::Value* ast_var_expr::gen_code() {
         if(parent_b == nullptr) {
             is_global = true;
             //llvm::Constant* init_var_val = gen_code(); 
-            llvm::Constant* constant_expr = llvm::dyn_cast<llvm::Constant>(init_val->gen_code());
+            if(init_val == nullptr){
+                stdlog.err() << "No initial value provided for " << cmp_node_type << " var " << name << std::endl;
+                throw PARSE_ERR;
+            }
+            llvm::Value* init_val_gen = init_val->gen_code();
+            llvm::Constant* constant_expr = llvm::dyn_cast<llvm::Constant>(init_val_gen);
             if(constant_expr == nullptr) {
                 stdlog.err() << "Nullptr returned casting init val to llvm::Constant for global " << name << std::endl;
                 throw PARSE_ERR;
@@ -103,14 +108,16 @@ llvm::Value* ast_var_expr::gen_code() {
             value_map[name] = var_alloca;
             val = var_alloca;
         
-            llvm::Value* init_var_val = init_val->gen_code();
+            if(init_val != nullptr){
+                llvm::Value* init_var_val = init_val->gen_code();
 
-            if(init_var_val == nullptr){
-                stdlog.err() << "Null initial value for variable " << name << std::endl;
-                throw PARSE_ERR;
+                if(init_var_val == nullptr){
+                    stdlog.err() << "Null initial value for variable " << name << std::endl;
+                    throw PARSE_ERR;
+                }
+
+                llvm_irbuilder->CreateStore(init_var_val, val);
             }
-
-            llvm_irbuilder->CreateStore(init_var_val, val);
         }
     }
     //if(is_global) return val; 
@@ -244,21 +251,7 @@ ast_bin_expr::ast_bin_expr() :
 //actual constructor
 ast_bin_expr::ast_bin_expr(bin_oper opcode_, std::unique_ptr<ast_expr>& lhs_, std::unique_ptr<ast_expr>& rhs_) :
     ast_expr(), opcode(opcode_), lhs(std::move(lhs_)), rhs(std::move(rhs_)) {
-    //get the iterator pointing to the function that will produce the correct value pointer
-    auto code_gen_func_iter = bin_oper_reduce_func_map.find({ lhs->cmp_node_type, opcode, rhs->cmp_node_type });
-    //check if the operation is valid
-    if (code_gen_func_iter == bin_oper_reduce_func_map.end()) {
-        //No valid operation for the two adjacent nodes
-        stdlog.err() << "No " << get_string_bin_oper(opcode) << " operation for nodes "
-            << lhs->cmp_node_type
-            << " and " << rhs->cmp_node_type << std::endl;
-        //throw err
-        throw PARSE_ERR;
-    }
-    else {
-        code_gen_func = &code_gen_func_iter->second;
-        cmp_node_type = code_gen_func_iter->second.return_type;
-    }
+    //
 }
 
 ast_bin_expr::~ast_bin_expr() {
@@ -269,7 +262,31 @@ llvm::Value* ast_bin_expr::gen_code() {
     //get the value of the two adjacent nodes
     llvm::Value* lhs_val = lhs->gen_code();
     llvm::Value* rhs_val = rhs->gen_code();
-    if (lhs_val == nullptr || rhs_val == nullptr) return nullptr;
+
+    
+    if (lhs_val == nullptr || rhs_val == nullptr) {
+        stdlog.err() << "Nullptr node in binexpr" << std::endl;
+        throw PARSE_ERR;
+    }
+
+    //get the iterator pointing to the function that will produce the correct value pointer
+    auto code_gen_func_iter = bin_oper_reduce_func_map.find({ lhs->cmp_node_type, opcode, rhs->cmp_node_type });
+    //check if the operation is valid
+    if (code_gen_func_iter == bin_oper_reduce_func_map.end()) {
+        //No valid operation for the two adjacent nodes
+        stdlog.err() << "No " << get_string_bin_oper(opcode) << " operation for nodes "
+            << lhs->cmp_node_type << " (" << lhs->name << "), "
+            << " and " << rhs->cmp_node_type << " (" << rhs->name << ")" << std::endl;
+        //throw err
+        throw PARSE_ERR;
+    }
+    code_gen_func = &code_gen_func_iter->second;
+    cmp_node_type = code_gen_func_iter->second.return_type;
+    
+    if(code_gen_func == nullptr){
+        stdlog.err() << "Code gen func for bin expr retreived as nullptr" << std::endl;
+        throw PARSE_ERR; 
+    }
     //generate the value pointer
     return code_gen_func->operator()(lhs_val, rhs_val);
 }
@@ -288,6 +305,7 @@ ast_bin_expr(), symbol(lhs_){
         stdlog.err() << "RHS nullptr as ast_lhs_ptr_bin_expr constructor" << std::endl;
         throw PARSE_ERR;
     }
+    opcode = opcode_;
 }
 
 //Unary expression
@@ -311,7 +329,7 @@ llvm::Value* ast_lhs_ptr_bin_expr::gen_code(){
     //check if the operation is valid
     if (code_gen_func_iter == bin_oper_reduce_func_map.end()) {
         //No valid operation for the two adjacent nodes
-        stdlog.err() << "No " << get_string_bin_oper(opcode) << " operation for nodes "
+        stdlog.err() << "LHSPTR No " << get_string_bin_oper(opcode) << " operation for nodes "
             << lhs_cmp_node_type
             << " and " << rhs->cmp_node_type << std::endl;
         //throw err
@@ -444,7 +462,7 @@ llvm::Function* ast_func_proto::gen_code() {
         //get the arg type as an llvm::Type*
         arg_llvm_types.push_back(type_map[arg->cmp_node_type](*llvm_context));
     }
-    //generate function type                                                                                      might need this as true, TODO:
+    //generate function type                                      might need this as true, TODO:
     llvm::FunctionType* f_llvm_type = llvm::FunctionType::get(type_map[return_type](*llvm_context), arg_llvm_types, false);
     llvm::Function* f_llvm = llvm::Function::Create(f_llvm_type, llvm::Function::ExternalLinkage, name, llvm_module.get());
 
@@ -503,13 +521,14 @@ llvm::Function* ast_func_def::gen_code() {
         arg_index++;
     }
 
+    llvm::Value* return_value = func_body->gen_code();
+
     //maybe should throw error
     if (func_body->cmp_node_type != func_proto->return_type) {
         stdlog.warn() << "Function " << func_proto->name << " is declared to return " << func_proto->return_type
             << ",  but returns " << func_body->cmp_node_type << std::endl;
     }
 
-    llvm::Value* return_value = func_body->gen_code();
     if (return_value != nullptr) {
         llvm_irbuilder->CreateRet(return_value);
         llvm::verifyFunction(*llvm_f);
@@ -547,6 +566,7 @@ llvm::Value* ast_func_block::gen_code() {
         else stdlog.warn() << "Null child" << std::endl;
     }
     llvm::Value* ret_val = return_expr->gen_code();
+    cmp_node_type = return_expr->cmp_node_type;
     if(ret_val == nullptr) stdlog.warn() << "Null return from function " << std::endl;
     return ret_val;
 }

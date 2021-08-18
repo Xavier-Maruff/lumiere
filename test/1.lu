@@ -7,9 +7,12 @@ lambda float ftest5(float a) -> {
     return ftest1(ftest4(a, 1.0123, 200))+glob
 }
 lambda float ftest6(float a) -> {
-    float asd = a
-    asd = 2.0
+    float asd = 2.0
+    asd = a
     return asd
+}
+lambda float ftest7(float q) -> {
+    return (q+2)*3
 }
 lambda string stest1(string a) -> a
 lambda string stest2() -> "my name jeff"

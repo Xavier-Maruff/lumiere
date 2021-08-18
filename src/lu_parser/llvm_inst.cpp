@@ -13,7 +13,7 @@ std::unique_ptr<llvm::IRBuilder<>> llvm_irbuilder = std::make_unique<llvm::IRBui
 type_transform_func* get_llvm_type(std::string type_name) {
     auto type_map_iter = type_map.find(type_name);
     if (type_map_iter == type_map.end()) {
-        stdlog.err() << "Type \"" << type_name << "\" is not recognised" << std::endl;
+        //stdlog.err() << "Type \"" << type_name << "\" is not recognised" << std::endl;
         return nullptr;
     }
     else return &type_map_iter->second;
@@ -56,7 +56,8 @@ llvm::GlobalVariable* create_global_var(std::string var_name, std::string type_n
 
     llvm_module->getOrInsertGlobal(var_name, var_type_transform->operator()(*llvm_context));
     llvm::GlobalVariable* global_var = llvm_module->getNamedGlobal(var_name);
-    global_var->setLinkage(llvm::GlobalValue::CommonLinkage);
+    //using common linkage makes it fucky and i don't know why
+    //global_var->setLinkage(llvm::GlobalValue::CommonLinkage);
     if(init_val != nullptr) global_var->setInitializer(init_val);
     //TODO: this needs to be auto generated based on type - maybe extend type map?
     global_var->setAlignment(llvm::MaybeAlign());

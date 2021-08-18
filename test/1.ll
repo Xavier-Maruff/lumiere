@@ -1,7 +1,7 @@
 ; ModuleID = 'lumiere'
 source_filename = "lumiere"
 
-@glob = common global double 1.200000e+01
+@glob = global double 1.200000e+01
 @0 = private unnamed_addr constant [13 x i8] c"my name jeff\00", align 1
 
 define double @ftest1(double %a) {
@@ -76,11 +76,22 @@ entry:
   %asd = alloca double
   %a1 = alloca double
   store double %a, double* %a1
-  %a2 = load double, double* %a1
-  store double %a2, double* %asd
-  %asd3 = load double, double* %asd
+  store double 2.000000e+00, double* %asd
+  %asd2 = load double, double* %asd
+  %a3 = load double, double* %a1
+  store double %a3, double* %asd
   %asd4 = load double, double* %asd
   ret double %asd4
+}
+
+define double @ftest7(double %q) {
+entry:
+  %q1 = alloca double
+  store double %q, double* %q1
+  %q2 = load double, double* %q1
+  %addtmp = fadd double %q2, 2.000000e+00
+  %addtmp3 = fmul double %addtmp, 3.000000e+00
+  ret double %addtmp3
 }
 
 define i8* @stest1(i8* %a) {
