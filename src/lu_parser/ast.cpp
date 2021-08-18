@@ -317,9 +317,9 @@ llvm::Value* ast_lhs_ptr_bin_expr::gen_code(){
         //throw err
         throw PARSE_ERR;
     }
-    
+
     code_gen_func = &code_gen_func_iter->second;
-    cmp_node_type = code_gen_func_iter->second.return_type;
+    //cmp_node_type = code_gen_func_iter->second.return_type;
 
     //get the value of the two adjacent nodes
     llvm::Value* lhs_val_ptr = value_map[symbol];
