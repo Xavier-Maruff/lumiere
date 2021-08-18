@@ -15,6 +15,7 @@ extern "C" {
     double ftest5(double);
     double ftest6(double);
     double ftest7(double);
+    double ftest8();
 
     const char* stest1(const char*);
     const char* stest2();
@@ -28,8 +29,9 @@ double ftest2_check(double a) { return a * 2.0 + -3.0 / 2.0; }
 double ftest3_check(double a) { return a - 12.0; }
 double ftest4_check(double a, double y, signed long p) { return a * p - p * y + a / -y; }
 double ftest5_check(double a) { return ftest1(ftest4(a, 1.0123, 200))+12.0; }
-double ftest6_check(double a) {return a;}
+double ftest6_check(double a) {return 12;}
 double ftest7_check(double a) {return (a+2)*3;}
+double ftest8_check() {return 10;}
 
 
 //Run funcs, check match
@@ -123,6 +125,7 @@ int main(int argc, char* argv[]) {
     push_string<double>(actual, ftest7(-1.0));
     push_string<double>(actual, ftest7(12.56));
     push_string<double>(actual, ftest7(-12.56));
+    push_string<double>(actual, ftest8());
 
     //string tests
     actual.emplace_back(stest1("test"));
@@ -147,6 +150,7 @@ int main(int argc, char* argv[]) {
     push_string<double>(expected, ftest7_check(-1.0));
     push_string<double>(expected, ftest7_check(12.56));
     push_string<double>(expected, ftest7_check(-12.56));
+    push_string<double>(expected, ftest8_check());
     //string truths
     expected.push_back("test");
     expected.push_back("my name jeff");

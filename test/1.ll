@@ -78,20 +78,27 @@ entry:
   store double %a, double* %a1
   store double 2.000000e+00, double* %asd
   %asd2 = load double, double* %asd
-  %a3 = load double, double* %a1
-  store double %a3, double* %asd
-  %asd4 = load double, double* %asd
-  ret double %asd4
+  %glob = load double, double* @glob
+  store double %glob, double* %asd
+  %asd3 = load double, double* %asd
+  ret double %asd3
 }
 
 define double @ftest7(double %q) {
 entry:
   %q1 = alloca double
   store double %q, double* %q1
+  store double 1.000000e+01, double* @glob
   %q2 = load double, double* %q1
   %addtmp = fadd double %q2, 2.000000e+00
   %addtmp3 = fmul double %addtmp, 3.000000e+00
   ret double %addtmp3
+}
+
+define double @ftest8() {
+entry:
+  %glob = load double, double* @glob
+  ret double %glob
 }
 
 define i8* @stest1(i8* %a) {
