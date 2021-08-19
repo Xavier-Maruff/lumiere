@@ -1,0 +1,17 @@
+float glob = 12.0
+
+lambda float get_glob() -> glob
+
+lambda float test_f(float a)-> a
+
+lambda string test_s(string a) -> a
+
+lambda float mutate_a(float b) -> {
+        b = b
+        return b
+}
+
+lambda float mutate_glob(float a) -> {
+    mutate_a(a)
+    return a
+}

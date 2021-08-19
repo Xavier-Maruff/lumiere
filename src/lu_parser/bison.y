@@ -12,6 +12,7 @@
     #include "log.hpp"
     #include "llvm_inst.hpp"
     #include "err_codes.h"
+    #include "cmp_time_extensible.hpp"
     #include <string>
     #include <sstream>
     #include <iostream>
@@ -25,7 +26,7 @@
     using ast_flt_expr_uptr = std::unique_ptr<ast_flt_expr>;
     using ast_string_expr_uptr = std::unique_ptr<ast_string_expr>;
     using ast_bin_expr_uptr = std::unique_ptr<ast_bin_expr>;
-    using ast_lhs_ptr_bin_expr_uptr = std::unique_ptr<ast_lhs_ptr_bin_expr>;
+    //using ast_lhs_ptr_bin_expr_uptr = std::unique_ptr<ast_lhs_ptr_bin_expr>;
     using ast_unary_expr_uptr = std::unique_ptr<ast_unary_expr>;
     using ast_var_expr_uptr = std::unique_ptr<ast_var_expr>;
     using ast_func_call_expr_uptr = std::unique_ptr<ast_func_call_expr>;
@@ -57,16 +58,20 @@
         return ast_bin_expr_uptr(new ast_bin_expr(opcode, lhs, rhs));
     }
 
-    ast_expr_uptr make_ast_lhs_ptr_bin_expr_uptr(bin_oper opcode, std::string lhs, ast_expr_uptr& rhs){
-        return ast_lhs_ptr_bin_expr_uptr(new ast_lhs_ptr_bin_expr(opcode, lhs, rhs));
-    }
+    //ast_expr_uptr make_ast_lhs_ptr_bin_expr_uptr(bin_oper opcode, std::string lhs, ast_expr_uptr& rhs){
+    //    return ast_lhs_ptr_bin_expr_uptr(new ast_lhs_ptr_bin_expr(opcode, lhs, rhs));
+    //}
 
     ast_expr_uptr make_ast_unary_expr_uptr(unary_oper opcode, ast_expr_uptr& target){
         return ast_unary_expr_uptr(new ast_unary_expr(opcode, target));
     }
 
-    ast_var_expr_uptr make_ast_var_expr_uptr(std::string var_type, std::string name){
+    ast_expr_uptr make_ast_var_expr_uptr(std::string var_type, std::string name){
         return ast_var_expr_uptr(new ast_var_expr(var_type, name));
+    }
+
+    ast_expr_uptr make_ast_var_expr_uptr(std::string name){
+        return ast_var_expr_uptr(new ast_var_expr(name));
     }
 
     ast_expr_uptr make_ast_func_call_expr_uptr(std::string callee, std::vector<ast_expr_uptr>& args){
@@ -123,7 +128,7 @@
 %type <ast_func_proto_uptr> lambda_dec;
 %type <ast_func_def_uptr> lambda_def;
 %type <ast_node_uptr> dec
-%type <ast_var_expr_uptr> var_dec;
+%type <ast_expr_uptr> var_dec;
 %type <std::vector<ast_node_uptr>> decs;
 %type <std::vector<ast_expr_uptr>> lambda_args;
 %type <ast_node_uptr> lambda_body;
@@ -142,6 +147,7 @@
 %left STAR SLASH
 %nonassoc UNEG
 %nonassoc EXPR_GROUP
+%nonassoc DECL_TOK
 
 %start program
 %%
@@ -199,21 +205,16 @@ dec: var_dec {
             //$$->gen_code();
         }
 
-var_dec: IDENT IDENT /*%prec DECL_TOK*/{
+var_dec: IDENT IDENT %prec DECL_TOK{
                         //DEBUG_LOGL(@1, "Assignment to new variable "+$2+" of type "+$1);
                         $$ = make_ast_var_expr_uptr($1, $2);
-                        symbol_type_map[$$->name] = $$->cmp_node_type;
-                        declared_symbols.push_back($$->name);
                         DEBUG_LOGL(@1, $1+" variable declaration "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
                 }
         | IDENT IDENT ASSIGN expr{
                 //DEBUG_LOGL(@1, "Assignment to new variable "+$2+" of type "+$1);
                 $$ = make_ast_var_expr_uptr($1, $2);
-                symbol_type_map[$$->name] = $$->cmp_node_type;
                 $$->set_init_val($4);
-                declared_symbols.push_back($$->name);
-                defined_symbols.push_back($$->name);
-                DEBUG_LOGL(@1, $1+" variable declaration "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
+                DEBUG_LOGL(@1, $1+" variable initial assignment "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
             }
 
 lambda_dec: LAMBDA_KW IDENT IDENT OPEN_PAREN decs CLOSE_PAREN {
@@ -226,7 +227,6 @@ lambda_dec: LAMBDA_KW IDENT IDENT OPEN_PAREN decs CLOSE_PAREN {
                         }
 
 lambda_def:  lambda_dec ARROW lambda_body {
-                    //TODO:
                     $$ = make_ast_func_def_uptr($1, $3);
                 }
             //| IDENT ASSIGN OPEN_PAREN decs CLOSE_PAREN ARROW lambda_body TODO:
@@ -251,7 +251,7 @@ lambda_block: OPEN_BRACE statements RETURN_KW expr CLOSE_BRACE {
             }
 
 expr: IDENT {
-                $$ = make_ast_var_expr_uptr(symbol_type_map[$1], $1);
+                $$ = make_ast_var_expr_uptr($1);
             }
     | INT_LIT {
                 $$ = make_ast_int_expr_uptr($1);
@@ -293,19 +293,17 @@ expr: IDENT {
             }*/
     | IDENT ASSIGN expr {
             DEBUG_LOGL(@1, "Assignment to mutable variable "+$1);
-            /*auto var_iter = symbol_type_map.find($1);
-            if(var_iter == symbol_type_map.end()) {
-                //TODO: error logging with better 
-                stdlog.err() << "Assignment to uninitialised variable " << $1 << std::endl;
+            //auto symbol_iter = declared_symbols.find($1);
+            auto symbol_type_iter = symbol_type_map.find($1);
+            if(symbol_type_iter != symbol_type_map.end()){
+                ast_expr_uptr var_ref = make_ast_var_expr_uptr($1);
+                $$ = make_ast_bin_expr_uptr(OPER_ASSIGN, var_ref, $3);
+                DEBUG_LOGL(@1, "Binary expression");
+            }
+            else {
+                stdlog.err() << ANSI_CYAN << @1 << ANSI_RESET << "\t Assignment to undeclared variable " << $1 << std::endl;
                 throw PARSE_ERR;
             }
-            ast_expr_uptr temp_var = make_ast_var_expr_uptr(var_iter->second, $1);*/
-            //llvm::Value* var_ptr = value_map[$1];
-            //if(var_ptr == nullptr){
-            //    stdlog.err() << "Variable " << $1 << " has not associated alloca instance" << std::endl;
-            //    throw PARSE_ERR;
-            //}
-            $$ = make_ast_lhs_ptr_bin_expr_uptr(OPER_ASSIGN, $1, $3);
         }
 	//function call
     | IDENT OPEN_PAREN lambda_args CLOSE_PAREN {

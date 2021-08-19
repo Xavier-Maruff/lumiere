@@ -18,6 +18,8 @@
 
 #include <map>
 #include <functional>
+#include <vector>
+#include <set>
 
 #include "ast_enums.h"
 //reduce a pair of value pointers to one value pointer
@@ -75,8 +77,18 @@ extern std::map<std::string, llvm::Value*> value_map;
 extern std::map<std::string, llvm::Value*> value_map_buffer;
 
 //globals
-extern std::vector<std::string> global_symbols;
-extern std::vector<std::string> defined_symbols;
-extern std::vector<std::string> declared_symbols;
+extern std::set<std::string> global_symbols;
+extern std::map<std::string, llvm::Value*> global_symbol_map;
+
+//declarations and definitions
+extern std::set<std::string> defined_symbols;
+extern std::set<std::string> declared_symbols;
+
+//buffers for dec and def
+extern std::set<std::string> defined_symbols_buffer;
+extern std::set<std::string> declared_symbols_buffer;
+
+void store_tables_to_buffer();
+void load_tables_from_buffer();
 
 #endif

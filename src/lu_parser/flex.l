@@ -2,6 +2,7 @@
 
 #include "driver.hpp"
 #include "bison.hpp"
+#include "cmp_time_extensible.hpp"
 #include <iostream>
 
 extern parser_driver drv;
@@ -51,7 +52,9 @@ identifier [_a-zA-Z][_a-zA-Z0-9]*
                         else yytext_str = "";
                         return yy::parser::make_STR_LIT(yytext_str, loc);
                     }
-"lambda"            return yy::parser::make_LAMBDA_KW(loc);
+"lambda"            {
+                        return yy::parser::make_LAMBDA_KW(loc);
+                    }
 "return"            return yy::parser::make_RETURN_KW(loc);
 {identifier}        return yy::parser::make_IDENT(std::string(yytext), loc);
 "("                 return yy::parser::make_OPEN_PAREN(loc);

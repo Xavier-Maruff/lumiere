@@ -87,46 +87,47 @@ Terminals, with rules where they appear
     "return" (276) 19 20
     UNEG (277)
     EXPR_GROUP (278)
+    DECL_TOK (279)
 
 
 Nonterminals, with rules where they appear
 
-    $accept (24)
+    $accept (25)
         on left: 0
-    program (25)
+    program (26)
         on left: 1 2
         on right: 0
-    statements <std::vector<ast_node_uptr>> (26)
+    statements <std::vector<ast_node_uptr>> (27)
         on left: 3 4
         on right: 2 4 19
-    statement <ast_node_uptr> (27)
+    statement <ast_node_uptr> (28)
         on left: 5 6 7
         on right: 3 4
-    decs <std::vector<ast_node_uptr>> (28)
+    decs <std::vector<ast_node_uptr>> (29)
         on left: 8 9
         on right: 9 14
-    dec <ast_node_uptr> (29)
+    dec <ast_node_uptr> (30)
         on left: 10 11
         on right: 5 8 9
-    var_dec <ast_var_expr_uptr> (30)
+    var_dec <ast_expr_uptr> (31)
         on left: 12 13
         on right: 10
-    lambda_dec <ast_func_proto_uptr> (31)
+    lambda_dec <ast_func_proto_uptr> (32)
         on left: 14 15
         on right: 11 16
-    lambda_def <ast_func_def_uptr> (32)
+    lambda_def <ast_func_def_uptr> (33)
         on left: 16
         on right: 7
-    lambda_body <ast_node_uptr> (33)
+    lambda_body <ast_node_uptr> (34)
         on left: 17 18
         on right: 16
-    lambda_block <ast_func_block_uptr> (34)
+    lambda_block <ast_func_block_uptr> (35)
         on left: 19 20
         on right: 18
-    expr <ast_expr_uptr> (35)
+    expr <ast_expr_uptr> (36)
         on left: 21 22 23 24 25 26 27 28 29 30 31 32
         on right: 6 13 17 19 20 25 26 27 28 29 30 32 33 34
-    lambda_args <std::vector<ast_expr_uptr>> (36)
+    lambda_args <std::vector<ast_expr_uptr>> (37)
         on left: 33 34 35
         on right: 31 34
 

@@ -29,7 +29,7 @@ ast_node::~ast_node() {
     //
 }
 
-llvm::Value* ast_node::gen_code(bool global_insert) {
+llvm::Value* ast_node::gen_code() {
     return nullptr;
 }
 
@@ -37,6 +37,10 @@ llvm::Value* ast_node::gen_code(bool global_insert) {
 ast_expr::ast_expr() :
 ast_node() {
     cmp_node_type = "expr";
+}
+
+void ast_expr::set_init_val(std::unique_ptr<ast_expr>& start_expr){
+    //dummy
 }
 
 ast_expr::~ast_expr() {
@@ -61,17 +65,152 @@ ast_var_expr::ast_var_expr(std::string cmp_node_type_, std::string name_, bool i
     ast_expr(), is_global(is_global_) {
     name = name_;
     cmp_node_type = cmp_node_type_;
+
+    //TODO: this does not work
+    //auto type_iter = symbol_type_map.find(name);
+    //if(type_iter == symbol_type_map.end()) symbol_type_map[name] = cmp_node_type;
+
+    
+    //this might cause issue when travelling up through scope
+    symbol_type_map[name] = cmp_node_type;
+}
+
+ast_var_expr::ast_var_expr(std::string name_, bool is_global_) :
+    ast_expr(), is_global(is_global_) {
+    name = name_;
+
+    //this might cause issue when travelling up through scope
+    cmp_node_type = symbol_type_map[name];
 }
 
 ast_var_expr::~ast_var_expr() {
     //
 }
 
-void ast_var_expr::set_init_val(std::unique_ptr<ast_expr>& init_val_){
-    init_val = std::move(init_val_);
+void ast_var_expr::set_init_val(std::unique_ptr<ast_expr>& start_expr){
+    if(start_expr == nullptr){
+        stdlog.warn() << "Nullptr initial value for var " << name << std::endl;
+    }
+    init_val = std::move(start_expr);
 }
 
-llvm::Value* ast_var_expr::gen_code(bool global_insert) {
+llvm::Value* ast_var_expr::gen_global_def(){
+    llvm::Value* ret_val = nullptr;
+    llvm::Value* init_val_gen = init_val->gen_code();
+    if(init_val_gen == nullptr){
+        stdlog.err() << "Initial value for var " << name << " return nullptr at codegen" << std::endl;
+        throw PARSE_ERR;
+    }
+    //cast to a constant
+    llvm::Constant* constant_expr = llvm::dyn_cast<llvm::Constant>(init_val_gen);
+    if(constant_expr == nullptr) {
+        stdlog.err() << "Nullptr returned casting init val to llvm::Constant for global " << name << std::endl;
+        throw PARSE_ERR;
+    }
+    //create the global variable
+    llvm::Value* global_var = create_global_var(name, cmp_node_type, constant_expr);
+    if(global_var == nullptr){
+        stdlog.err() << "Nullptr returned creating global var " << name << std::endl;
+        throw PARSE_ERR;
+    }
+    //record the global var in the symbol table
+    value_map[name] = global_var;
+    global_symbol_map[name] = global_var;
+    ret_val = global_var;
+    declared_symbols.insert(name);
+    defined_symbols.insert(name);
+    stdlog() << "Defined global var" << std::endl;
+    return ret_val;
+}
+
+llvm::Value* ast_var_expr::gen_code(){
+
+    //TODO: this might not work
+    //auto type_iter = symbol_type_map.find(name);
+    //if(type_iter != symbol_type_map.end()) cmp_node_type = type_iter->second;
+    //else symbol_type_map[name] = cmp_node_type;
+
+    stdlog() << "Var " << name << " type at codegen: " << cmp_node_type << std::endl;
+
+    llvm::Value* ret_val = nullptr;
+    llvm::BasicBlock* parent_b = llvm_irbuilder->GetInsertBlock();
+
+    //var needs to be declared
+    if(declared_symbols.find(name) == declared_symbols.end()){
+        //create the var declaration
+        //block is nullptr or global explicitly stated, must be a global var
+        //llvm say globals vars MUST be assigned at declaration
+        if(parent_b == nullptr || global_symbols.find(name) != global_symbols.end()){
+            is_global = true;
+            global_symbols.insert(name);
+            if(init_val == nullptr){
+                stdlog.warn() << "No initial value provided for global var " << name << ", added to global symbol table" << std::endl;
+                return nullptr;
+            }
+            else {
+                //declare and define global var
+                //get the initial value
+                //TODO: move this to gen_global_def
+                ret_val = gen_global_def();
+            }
+        }
+        else {
+            //declare a local variable
+            llvm::AllocaInst* var_alloca = insert_alloca_at_entry(parent_b, name, cmp_node_type);
+
+            if(var_alloca == nullptr) {
+                stdlog.err() << "Variable " << name << " allocation failed" << std::endl;
+                throw PARSE_ERR;
+            }
+
+            value_map[name] = var_alloca;
+            ret_val = var_alloca;
+
+            declared_symbols.insert(name);
+        }
+    }
+
+    //check that there is a valid value
+    if(global_symbols.find(name) != global_symbols.end()) ret_val = global_symbol_map[name];
+    else ret_val = value_map[name];
+
+    if(ret_val == nullptr){
+        stdlog.err() << "Nullptr alloca value found for var " << name << std::endl;
+        throw PARSE_ERR;
+    }
+
+    //var has already been declared, check if it has been defined
+    if(defined_symbols.find(name) == defined_symbols.end() && !is_global) {
+        //if not defined, store the initial value
+        if(init_val != nullptr){
+            llvm::Value* init_val_gen = init_val->gen_code();
+            if(init_val_gen == nullptr) {
+                stdlog.err() << "Nullptr initial value after codegen for var " << name << std::endl;
+            }
+            llvm_irbuilder->CreateStore(init_val_gen, ret_val);
+            defined_symbols.insert(name);
+        }
+        //else stdlog.warn() << "No init val provided for var " << name << std::endl;
+    }
+
+    //get the variable type information
+    type_transform_func* type_ptr = get_llvm_type(cmp_node_type);
+    if(type_ptr == nullptr) {
+        stdlog.err() << "Variable " << name << " type (" << cmp_node_type << ") not recognised" << std::endl;
+        throw PARSE_ERR;
+    }
+    llvm::Type* var_type = type_ptr->operator()(*llvm_context);
+    if(var_type == nullptr){
+        stdlog.err() << "Error retrieving variable " << name << " type (" << cmp_node_type << ")" << std::endl;
+        throw PARSE_ERR;
+    }
+
+    //return the load instruction
+    return llvm_irbuilder->CreateLoad(var_type, ret_val, name.c_str());
+}
+
+/*
+llvm::Value* ast_var_expr::gen_code() {
     llvm::Value* val = value_map[name];
     if (val == nullptr) {
         llvm::BasicBlock* parent_b = llvm_irbuilder->GetInsertBlock();
@@ -140,6 +279,7 @@ llvm::Value* ast_var_expr::gen_code(bool global_insert) {
     return llvm_irbuilder->CreateLoad(var_type, val, name.c_str());
     
 }
+*/
 
 std::string ast_var_expr::get_expr_type() {
     return "var";
@@ -162,7 +302,7 @@ ast_flt_expr::~ast_flt_expr() {
     //
 }
 
-llvm::Value* ast_flt_expr::gen_code(bool global_insert) {
+llvm::Value* ast_flt_expr::gen_code() {
     return llvm::ConstantFP::get(*llvm_context, llvm::APFloat(value));
 }
 
@@ -187,7 +327,7 @@ ast_int_expr::~ast_int_expr() {
     //
 }
 
-llvm::Value* ast_int_expr::gen_code(bool global_insert) {
+llvm::Value* ast_int_expr::gen_code() {
     // args: numbits, value, isSigned
     return llvm::ConstantInt::get(*llvm_context, llvm::APInt(64, value, true));
 }
@@ -212,7 +352,7 @@ ast_block::~ast_block() {
     //
 }
 
-llvm::Value* ast_block::gen_code(bool global_insert) {
+llvm::Value* ast_block::gen_code() {
     for (std::unique_ptr<ast_node>& child : children) {
         child->gen_code();
     }
@@ -237,14 +377,7 @@ ast_string_expr::~ast_string_expr() {
 
 //get ref to string value
 //TODO: this is segfaulting in global insert
-llvm::Value* ast_string_expr::gen_code(bool global_insert) {
-
-    if(global_insert){
-        //llvm_irbuilder->CreateGlobalString(llvm::String)
-        //return llvm::ConstantDataArray::getString(*llvm_context, llvm::StringRef(value));
-        return llvm::ConstantDataArray::getString(*llvm_context, llvm::StringRef(value));
-    }
-
+llvm::Value* ast_string_expr::gen_code() {
     return llvm_irbuilder->CreateGlobalStringPtr(llvm::StringRef(value));
 }
 
@@ -271,7 +404,7 @@ ast_bin_expr::~ast_bin_expr() {
     //
 }
 
-llvm::Value* ast_bin_expr::gen_code(bool global_insert) {
+llvm::Value* ast_bin_expr::gen_code() {
     //get the value of the two adjacent nodes
     llvm::Value* rhs_val = rhs->gen_code();
     llvm::Value* lhs_val = lhs->gen_code();
@@ -310,75 +443,24 @@ std::string ast_bin_expr::get_expr_type() {
 
 const expr_node_type ast_bin_expr::bin_expr_type = BIN_EXPR_NODE;
 
-/*
-//binary expression with pre-gen lhs
-ast_lhs_ptr_bin_expr::ast_lhs_ptr_bin_expr(bin_oper opcode_, std::string lhs_, std::unique_ptr<ast_expr>& rhs_):
-ast_bin_expr(), symbol(lhs_){
-    rhs = std::move(rhs_);
-    if(rhs == nullptr){
-        stdlog.err() << "RHS nullptr as ast_lhs_ptr_bin_expr constructor" << std::endl;
-        throw PARSE_ERR;
-    }
-    opcode = opcode_;
-}
-
-//Unary expression
-ast_unary_expr::ast_unary_expr():
-ast_expr(), opcode(U_OPER_NEG), target(nullptr){
-    //
-}
-
-//generate code - skip lhs codegen
-llvm::Value* ast_lhs_ptr_bin_expr::gen_code(bool global_insert){
-    //get the type of the left arg
-    auto lhs_cmp_node_type_iter = symbol_type_map.find(symbol);
-    if(lhs_cmp_node_type_iter == symbol_type_map.end()){
-        stdlog.err() << "Symbol " << symbol << " has no registered type" << std::endl;
-        throw PARSE_ERR;
-    }
-    std::string lhs_cmp_node_type = lhs_cmp_node_type_iter->second;
-    bool lhs_is_global = std::find(global_symbols.begin(), global_symbols.end(), symbol) != global_symbols.end();
-
-    std::unique_ptr<ast_var_expr> lhs_var = std::make_unique<ast_var_expr>(lhs_cmp_node_type, symbol, lhs_is_global);
-    lhs_var->set_init_val(rhs);
-
-    //get the iterator pointing to the function that will produce the correct value pointer
-    auto code_gen_func_iter = bin_oper_reduce_func_map.find({ lhs_cmp_node_type, opcode, rhs->cmp_node_type });
-    //check if the operation is valid
-    if (code_gen_func_iter == bin_oper_reduce_func_map.end()) {
-        //No valid operation for the two adjacent nodes
-        stdlog.err() << "LHSPTR No " << get_string_bin_oper(opcode) << " operation for nodes "
-            << lhs_cmp_node_type
-            << " and " << rhs->cmp_node_type << std::endl;
-        //throw err
-        throw PARSE_ERR;
-    }
-
-    code_gen_func = &code_gen_func_iter->second;
-    //cmp_node_type = code_gen_func_iter->second.return_type;
-
-    //get the value of the two adjacent nodes
-    //llvm::Value* lhs_val_ptr = value_map[symbol];
-    llvm::Value* lhs_val_ptr = lhs_var->gen_code();
-    llvm::Value* rhs_val_ptr = rhs->gen_code();
-    //if(lhs_val_ptr == nullptr) return nullptr;
-    if (lhs_val_ptr == nullptr || rhs_val_ptr == nullptr) return nullptr;
-
-    if(std::find(defined_symbols.begin(), defined_symbols.end(), symbol) == defined_symbols.end()){
-        defined_symbols.push_back(symbol);
-    }
-
-    //generate the value pointer
-    return code_gen_func->operator()(lhs_val_ptr, rhs_val_ptr);
-}
-
-ast_lhs_ptr_bin_expr::~ast_lhs_ptr_bin_expr(){
-    //
-}
-*/
-
 ast_unary_expr::ast_unary_expr(unary_oper opcode_, std::unique_ptr<ast_expr>& target_):
 ast_expr(), opcode(opcode_), target(std::move(target_)){
+    //
+}
+
+ast_unary_expr::~ast_unary_expr(){
+    //
+}
+
+std::string ast_unary_expr::get_expr_type(){
+    return "unary";
+}
+
+llvm::Value* ast_unary_expr::gen_code() {
+    //get the value of the two adjacent nodes
+    llvm::Value* target_val = target->gen_code();
+    if (target_val == nullptr) return nullptr;
+
     //get the iterator pointing to the function that will produce the correct value pointer
     auto code_gen_func_iter = unary_oper_reduce_func_map.find({opcode, target->cmp_node_type});
     //check if the operation is valid
@@ -393,20 +475,8 @@ ast_expr(), opcode(opcode_), target(std::move(target_)){
         code_gen_func = &code_gen_func_iter->second;
         cmp_node_type = code_gen_func_iter->second.return_type;
     }
-}
 
-ast_unary_expr::~ast_unary_expr(){
-    //
-}
 
-std::string ast_unary_expr::get_expr_type(){
-    return "unary";
-}
-
-llvm::Value* ast_unary_expr::gen_code(bool global_insert) {
-    //get the value of the two adjacent nodes
-    llvm::Value* target_val = target->gen_code();
-    if (target_val == nullptr) return nullptr;
     //generate the value pointer
     return code_gen_func->operator()(target_val);
 }
@@ -422,7 +492,7 @@ ast_func_call_expr::~ast_func_call_expr() {
 }
 
 //TODO:
-llvm::Value* ast_func_call_expr::gen_code(bool global_insert) {
+llvm::Value* ast_func_call_expr::gen_code() {
     llvm::Function* f_callee = llvm_module->getFunction(callee);
     if (f_callee == nullptr) {
         stdlog.err() << "Function \"" << callee << "\" not recognised" << std::endl;
@@ -434,12 +504,13 @@ llvm::Value* ast_func_call_expr::gen_code(bool global_insert) {
     }
     std::vector<llvm::Value*> arg_values;
     for (uint index = 0; index < args.size(); index++) {
+        llvm::Value* arg_code_gen = args[index]->gen_code();
+        if(arg_code_gen == nullptr) return nullptr;
         if (args[index]->cmp_node_type != func_args_type_map[callee][index]) {
             stdlog.warn() << callee << " argument " << index << " is of type " << args[index]->cmp_node_type
                 << ", was expecting " << func_args_type_map[callee][index] << std::endl;
         }
-        arg_values.push_back(args[index]->gen_code());
-        if (arg_values.back() == nullptr) return nullptr;
+        arg_values.push_back(arg_code_gen);
     }
 
     return llvm_irbuilder->CreateCall(f_callee, arg_values, "calltmp");
@@ -479,7 +550,7 @@ ast_func_proto::~ast_func_proto() {
 }
 
 //generate ir
-llvm::Function* ast_func_proto::gen_code(bool global_insert) {
+llvm::Function* ast_func_proto::gen_code() {
     //return nullptr;
     std::vector<llvm::Type*> arg_llvm_types;
     for (std::unique_ptr<ast_node>& arg : args) {
@@ -519,7 +590,7 @@ ast_func_def::~ast_func_def() {
 }
 
 //TODO: check this
-llvm::Function* ast_func_def::gen_code(bool global_insert) {
+llvm::Function* ast_func_def::gen_code() {
 
     llvm::Function* llvm_f = llvm_module->getFunction(func_proto->name);
     if (llvm_f == nullptr) llvm_f = func_proto->gen_code();
@@ -532,8 +603,9 @@ llvm::Function* ast_func_def::gen_code(bool global_insert) {
     llvm_irbuilder->SetInsertPoint(block_f);
 
     //might do an outer join, then revert after
-    value_map_buffer.clear();
-    value_map_buffer = value_map;
+    //value_map_buffer.clear();
+    //value_map_buffer = value_map;
+    store_tables_to_buffer();
 
     std::vector<std::string> arg_types = func_args_type_map[func_proto->name];
     //value_map.clear();
@@ -556,15 +628,17 @@ llvm::Function* ast_func_def::gen_code(bool global_insert) {
     if (return_value != nullptr) {
         llvm_irbuilder->CreateRet(return_value);
         llvm::verifyFunction(*llvm_f);
-        value_map = value_map_buffer;
-        value_map_buffer.clear();
+        load_tables_from_buffer();
+        //value_map = value_map_buffer;
+        //value_map_buffer.clear();
         return llvm_f;
     }
 
     stdlog.err() << "Func body gen code returned nullptr" << std::endl;
     llvm_f->eraseFromParent();
-    value_map = value_map_buffer;
-    value_map_buffer.clear();
+    load_tables_from_buffer();
+    //value_map = value_map_buffer;
+    //value_map_buffer.clear();
     return nullptr;
 
 }
@@ -584,7 +658,7 @@ ast_func_block::~ast_func_block() {
     //
 }
 
-llvm::Value* ast_func_block::gen_code(bool global_insert) {
+llvm::Value* ast_func_block::gen_code() {
     for (std::unique_ptr<ast_node>& child : children) {
         if(child != nullptr) child->gen_code();
         else stdlog.warn() << "Null child" << std::endl;

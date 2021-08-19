@@ -1,34 +1,34 @@
-float glob
+//float glob = 12.0
 lambda float ftest1(float a) -> -a*2.0+12.0
 lambda float ftest2(float a) -> a*2.0+-3.0/2.0
 lambda float ftest3(float a) -> a-12.0
 lambda float ftest4(float a, float y, int p) -> {
-    glob = 12.0
+    //glob = 12.0
     return a*p-p*y+a/-y
 }
 
 //check function call
 lambda float ftest5(float a) -> {
-    return ftest1(ftest4(a, 1.0123, 200))+glob
+    return ftest1(ftest4(a, 1.0123, 200))//+glob
 }
 
 //check variable assignment, global load
 lambda float ftest6(float a) -> {
     float asd = 2.0
-    float zxcv
-    zxcv = glob
-    asd = zxcv
+    //float zxcv
+    //zxcv = glob
+    //asd = zxcv
     return asd
 }
 
 //check expression grouping, global assignment
 lambda float ftest7(float q) -> {
-    glob = 10.0
+    //glob = 10.0
     return (q+2)*3
 }
 
 //check global mutability
-lambda float ftest8() -> glob
+lambda float ftest8() -> 1.3
 
 //check global no init val
 lambda float ftest9() -> 1.2
