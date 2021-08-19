@@ -23,7 +23,7 @@ class ast_node{
     virtual ~ast_node() = 0;
 
     //generate the IR
-    virtual llvm::Value* gen_code();
+    virtual llvm::Value* gen_code(bool global_insert = false);
 
 };
 
@@ -49,7 +49,7 @@ class ast_block: public ast_node{
     ast_block();
     virtual ~ast_block();
 
-    virtual llvm::Value* gen_code() override;
+    virtual llvm::Value* gen_code(bool global_insert = false) override;
 };
 
 class ast_func_block: public ast_block{
@@ -60,7 +60,7 @@ class ast_func_block: public ast_block{
     ast_func_block(std::unique_ptr<ast_expr>& return_expr_);
     ~ast_func_block();
 
-    llvm::Value* gen_code() override;
+    llvm::Value* gen_code(bool global_insert = false) override;
 };
 
 //baked variable expression - TODO: mutable
@@ -74,7 +74,7 @@ class ast_var_expr: public ast_expr{
     ast_var_expr(std::string cmp_node_type_, std::string name_, bool is_global_ = false);
     virtual ~ast_var_expr();
 
-    llvm::Value* gen_code() override;
+    llvm::Value* gen_code(bool global_insert = false) override;
     std::string get_expr_type() override;
     //TODO: will be deprecated after mutable vars are added
     void set_init_val(std::unique_ptr<ast_expr>& init_val_);
@@ -97,7 +97,7 @@ class ast_flt_expr: public ast_expr{
     ast_flt_expr(double value_);
     virtual ~ast_flt_expr();
 
-    llvm::Value* gen_code() override;
+    llvm::Value* gen_code(bool global_insert = false) override;
     std::string get_expr_type() override;
 };
 
@@ -112,7 +112,7 @@ class ast_int_expr: public ast_expr{
     ast_int_expr(int64_t value_);
     virtual ~ast_int_expr();
     
-    llvm::Value* gen_code() override;
+    llvm::Value* gen_code(bool global_insert = false) override;
     std::string get_expr_type() override;
 };
 
@@ -128,7 +128,7 @@ class ast_string_expr: public ast_expr{
     ast_string_expr(std::string value_);
     virtual ~ast_string_expr();
     
-    llvm::Value* gen_code() override;
+    llvm::Value* gen_code(bool global_insert = false) override;
     std::string get_expr_type() override;
 };
 
@@ -148,10 +148,11 @@ class ast_bin_expr: public ast_expr{
     ast_bin_expr(bin_oper opcode_, std::unique_ptr<ast_expr>& lhs_, std::unique_ptr<ast_expr>& rhs_);
     virtual ~ast_bin_expr();
 
-    llvm::Value* gen_code() override;
+    llvm::Value* gen_code(bool global_insert = false) override;
     std::string get_expr_type() override;
 };
 
+/*
 class ast_lhs_ptr_bin_expr: public ast_bin_expr{
     public:
     std::string symbol;
@@ -160,8 +161,9 @@ class ast_lhs_ptr_bin_expr: public ast_bin_expr{
     ast_lhs_ptr_bin_expr(bin_oper opcode_, std::string lhs_, std::unique_ptr<ast_expr>& rhs_);
     virtual ~ast_lhs_ptr_bin_expr();
 
-    llvm::Value* gen_code() override;
+    llvm::Value* gen_code(bool global_insert = false) override;
 };
+*/
 
 //unary expression
 class ast_unary_expr: public ast_expr{
@@ -176,7 +178,7 @@ class ast_unary_expr: public ast_expr{
     ast_unary_expr(unary_oper opcode_, std::unique_ptr<ast_expr>& target_);
     virtual ~ast_unary_expr();
 
-    llvm::Value* gen_code() override;
+    llvm::Value* gen_code(bool global_insert = false) override;
     std::string get_expr_type() override;
 };
 
@@ -193,7 +195,7 @@ class ast_func_call_expr: public ast_expr{
     ast_func_call_expr(std::string callee_, std::vector<std::unique_ptr<ast_expr>>& args_);
     virtual ~ast_func_call_expr();
 
-    llvm::Value* gen_code() override;
+    llvm::Value* gen_code(bool global_insert = false) override;
     std::string get_expr_type() override;
 };
 
@@ -208,7 +210,7 @@ class ast_func_proto: public ast_node{
     ast_func_proto(std::string name_, std::string return_type_);
     virtual ~ast_func_proto();
 
-    llvm::Function* gen_code();
+    llvm::Function* gen_code(bool global_insert = false);
 };
 
 class ast_func_def: public ast_node{
@@ -223,7 +225,7 @@ class ast_func_def: public ast_node{
     //ast_func_def(std::unique_ptr<ast_func_proto>& func_proto_);
     virtual ~ast_func_def();
 
-    llvm::Function* gen_code();
+    llvm::Function* gen_code(bool global_insert = false);
 };
 
 

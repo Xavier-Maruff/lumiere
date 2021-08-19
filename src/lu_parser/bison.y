@@ -203,6 +203,7 @@ var_dec: IDENT IDENT /*%prec DECL_TOK*/{
                         //DEBUG_LOGL(@1, "Assignment to new variable "+$2+" of type "+$1);
                         $$ = make_ast_var_expr_uptr($1, $2);
                         symbol_type_map[$$->name] = $$->cmp_node_type;
+                        declared_symbols.push_back($$->name);
                         DEBUG_LOGL(@1, $1+" variable declaration "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
                 }
         | IDENT IDENT ASSIGN expr{
@@ -210,6 +211,8 @@ var_dec: IDENT IDENT /*%prec DECL_TOK*/{
                 $$ = make_ast_var_expr_uptr($1, $2);
                 symbol_type_map[$$->name] = $$->cmp_node_type;
                 $$->set_init_val($4);
+                declared_symbols.push_back($$->name);
+                defined_symbols.push_back($$->name);
                 DEBUG_LOGL(@1, $1+" variable declaration "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
             }
 

@@ -120,6 +120,9 @@ bin_oper_reduce_func_map_type bin_oper_reduce_func_map = {
     {{"float", OPER_ASSIGN, "float"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
         return llvm_irbuilder->CreateStore(rhs, lhs);
     }, "float"}},
+    {{"string", OPER_ASSIGN, "string"}, {[](llvm::Value* lhs, llvm::Value* rhs)-> llvm::Value* {
+        return llvm_irbuilder->CreateStore(rhs, lhs);
+    }, "string"}}
 };
 
 unary_oper_reduce_func_map_type unary_oper_reduce_func_map = {
@@ -135,3 +138,6 @@ std::map<std::string, std::string> symbol_type_map = {};
 std::map<std::string, llvm::Value*> value_map = {};
 std::map<std::string, llvm::Value*> value_map_buffer = {};
 std::map<std::string, std::vector<std::string>> func_args_type_map = {};
+std::vector<std::string> global_symbols = {};
+std::vector<std::string> defined_symbols = {};
+std::vector<std::string> declared_symbols = {};

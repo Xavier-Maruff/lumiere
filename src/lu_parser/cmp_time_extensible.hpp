@@ -74,7 +74,9 @@ extern std::map<std::string, std::vector<std::string>> func_args_type_map;
 extern std::map<std::string, llvm::Value*> value_map;
 extern std::map<std::string, llvm::Value*> value_map_buffer;
 
-//TODO: Adding mutable variables YOU LEFT OFF DOING THIS
-//static llvm::AllocaIns
+//globals
+extern std::vector<std::string> global_symbols;
+extern std::vector<std::string> defined_symbols;
+extern std::vector<std::string> declared_symbols;
 
 #endif

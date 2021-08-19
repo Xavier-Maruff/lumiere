@@ -16,10 +16,12 @@ extern "C" {
     double ftest6(double);
     double ftest7(double);
     double ftest8();
+    double ftest9();
 
     const char* stest1(const char*);
     const char* stest2();
     const char* stest3();
+    const char* stest4();
 }
 
 //Source of truth
@@ -32,6 +34,7 @@ double ftest5_check(double a) { return ftest1(ftest4(a, 1.0123, 200))+12.0; }
 double ftest6_check(double a) {return 12;}
 double ftest7_check(double a) {return (a+2)*3;}
 double ftest8_check() {return 10;}
+double ftest9_check() {return 1.2;}
 
 
 //Run funcs, check match
@@ -126,11 +129,13 @@ int main(int argc, char* argv[]) {
     push_string<double>(actual, ftest7(12.56));
     push_string<double>(actual, ftest7(-12.56));
     push_string<double>(actual, ftest8());
+    push_string<double>(actual, ftest9());
 
     //string tests
     actual.emplace_back(stest1("test"));
     actual.emplace_back(stest2());
     actual.emplace_back(stest3());
+    actual.emplace_back(stest4());
 
     //sources of truth
     //double truths
@@ -151,10 +156,12 @@ int main(int argc, char* argv[]) {
     push_string<double>(expected, ftest7_check(12.56));
     push_string<double>(expected, ftest7_check(-12.56));
     push_string<double>(expected, ftest8_check());
+    push_string<double>(expected, ftest9_check());
     //string truths
     expected.push_back("test");
     expected.push_back("my name jeff");
     expected.push_back("my name jeff");
+    expected.push_back("test");
 
 
     std::cout << std::endl << "\tTest Results" << std::endl;
