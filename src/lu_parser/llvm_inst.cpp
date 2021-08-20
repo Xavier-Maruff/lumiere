@@ -46,6 +46,23 @@ llvm::AllocaInst* insert_alloca_at_entry(llvm::BasicBlock* b_to_insert, const st
 }
 
 
+
+//insert an alloca at the current position
+//block overload
+llvm::AllocaInst* insert_alloca(llvm::BasicBlock* b_to_insert, const std::string var_name, const std::string type_name) {
+    type_transform_func* var_type_transform = get_llvm_type(type_name);
+
+    if (var_type_transform == nullptr) {
+        stdlog.err() << "Variable \"" << var_name << "\" is of an unrecognised type (\"" << type_name << "\")" << std::endl;
+        return nullptr;
+    }
+    llvm::IRBuilder<> temp_block(b_to_insert);
+    return temp_block.CreateAlloca(var_type_transform->operator()(*llvm_context), 0, var_name.c_str());
+}
+
+
+
+
 //create a global variable
 llvm::GlobalVariable* create_global_var(std::string var_name, std::string type_name, llvm::Constant* init_val) {
     type_transform_func* var_type_transform = get_llvm_type(type_name);

@@ -9,43 +9,40 @@ entry:
   ret double %glob
 }
 
-define double @test_f(double %a) {
-entry:
-  %a2 = alloca double
-  %a1 = alloca double
-  store double %a, double* %a1
-  %a3 = load double, double* %a2
-  ret double %a3
-}
-
-define i8* @test_s(i8* %a) {
-entry:
-  %a2 = alloca i8*
-  %a1 = alloca i8*
-  store i8* %a, i8** %a1
-  %a3 = load i8*, i8** %a2
-  ret i8* %a3
-}
-
 define double @mutate_a(double %b) {
 entry:
-  %b2 = alloca double
   %b1 = alloca double
   store double %b, double* %b1
-  %b3 = load double, double* %b2
-  %b4 = load double, double* %b2
-  store double %b3, double %b4
-  %b5 = load double, double* %b2
-  ret double %b5
+  %a = alloca i64
+  store i64 12, i64* %a
+  %a2 = load i64, i64* %a
+  %a3 = load i64, i64* %a
+  %b4 = alloca double
+  %b5 = load double, double* %b4
+  %0 = sitofp i64 %a3 to double
+  %addtmp = fadd double %b5, %0
+  ret double %addtmp
 }
 
 define double @mutate_glob(double %a) {
 entry:
-  %a2 = alloca double
   %a1 = alloca double
   store double %a, double* %a1
-  %a3 = load double, double* %a2
-  %calltmp = call double @mutate_a(double %a3)
-  %a4 = load double, double* %a2
-  ret double %a4
+  %b = alloca double
+  %b2 = load double, double* %b
+  %a3 = alloca double
+  %a4 = load double, double* %a3
+  %addtmp = fadd double %a4, %b2
+  %calltmp = call double @mutate_a(double %addtmp)
+  %a5 = load double, double* %a3
+  ret double %a5
+}
+
+define i8* @stest(i8* %a) {
+entry:
+  %a1 = alloca i8*
+  store i8* %a, i8** %a1
+  %a2 = alloca i8*
+  %a3 = load i8*, i8** %a2
+  ret i8* %a3
 }

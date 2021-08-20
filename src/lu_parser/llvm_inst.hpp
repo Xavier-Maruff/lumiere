@@ -39,7 +39,10 @@ std::function<llvm::Type*(llvm::LLVMContext&)>* get_llvm_type(std::string type_n
 
 //insert an alloca at function entry
 llvm::AllocaInst* insert_alloca_at_entry(llvm::Function*, const std::string, const std::string);
+//insert alloca at block entry
 llvm::AllocaInst* insert_alloca_at_entry(llvm::BasicBlock*, const std::string, const std::string);
+//insert alloca at current cursor position
+llvm::AllocaInst* insert_alloca(llvm::BasicBlock* b_to_insert, const std::string var_name, const std::string type_name);
 
 //create global variable
 llvm::GlobalVariable* create_global_var(std::string var_name, std::string var_type, llvm::Constant* init_val = nullptr);

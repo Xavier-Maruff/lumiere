@@ -156,7 +156,8 @@ llvm::Value* ast_var_expr::gen_code(){
         }
         else {
             //declare a local variable
-            llvm::AllocaInst* var_alloca = insert_alloca_at_entry(parent_b, name, cmp_node_type);
+            //llvm::AllocaInst* var_alloca = insert_alloca_at_entry(parent_b, name, cmp_node_type);
+            llvm::AllocaInst* var_alloca = insert_alloca(parent_b, name, cmp_node_type);
 
             if(var_alloca == nullptr) {
                 stdlog.err() << "Variable " << name << " allocation failed" << std::endl;
@@ -208,78 +209,6 @@ llvm::Value* ast_var_expr::gen_code(){
     //return the load instruction
     return llvm_irbuilder->CreateLoad(var_type, ret_val, name.c_str());
 }
-
-/*
-llvm::Value* ast_var_expr::gen_code() {
-    llvm::Value* val = value_map[name];
-    if (val == nullptr) {
-        llvm::BasicBlock* parent_b = llvm_irbuilder->GetInsertBlock();
-        if(parent_b == nullptr || std::find(global_symbols.begin(), global_symbols.end(), name) != global_symbols.end()) {
-            is_global = true;
-            global_symbols.push_back(name);
-            if(init_val == nullptr){
-                stdlog.warn() << "Global " << cmp_node_type << " var " << name << " skipped" << std::endl;
-            }
-            else {
-                stdlog.warn() << "Assigning global " << cmp_node_type << " var " << name << std::endl;
-                llvm::Value* init_val_gen = init_val->gen_code(true);
-                llvm::Constant* constant_expr = llvm::dyn_cast<llvm::Constant>(init_val_gen);
-                if(constant_expr == nullptr) {
-                    stdlog.err() << "Nullptr returned casting init val to llvm::Constant for global " << name << std::endl;
-                    throw PARSE_ERR;
-                }
-                llvm::Value* global_var = create_global_var(name, cmp_node_type, constant_expr);
-                if(global_var == nullptr){
-                    stdlog.err() << "Nullptr returned creating global var " << name << std::endl;
-                    throw PARSE_ERR;
-                }
-                value_map[name] = global_var;
-                val = global_var;
-            }
-        }
-        else {
-            stdlog.warn() << "Assigning local " << cmp_node_type << " var " << name << std::endl;
-            is_global = false;
-            llvm::AllocaInst* var_alloca = insert_alloca_at_entry(parent_b, name, cmp_node_type);
-
-            if(var_alloca == nullptr) {
-                stdlog.err() << "Variable " << name << " allocation failed" << std::endl;
-                throw PARSE_ERR;
-            }
-
-            value_map[name] = var_alloca;
-            val = var_alloca;
-        
-            if(init_val != nullptr){
-                stdlog.warn() << "creating load for local var " << name << std::endl;
-                llvm::Value* init_var_val = init_val->gen_code();
-
-                if(init_var_val == nullptr){
-                    stdlog.err() << "Null initial value for variable " << name << std::endl;
-                    throw PARSE_ERR;
-                }
-
-                llvm_irbuilder->CreateStore(init_var_val, val);
-            }
-            else stdlog.warn() << "nullptr init val of local assignment " << name << std::endl;
-        }
-    }
-    //if(is_global) return val; 
-    //else return llvm_irbuilder->CreateLoad(val, name.c_str());
-    type_transform_func* type_ptr = get_llvm_type(cmp_node_type);
-    if(type_ptr == nullptr) {
-        stdlog.err() << "Variable " << name << " type (" << cmp_node_type << ") not recognised" << std::endl;
-        throw PARSE_ERR;
-    }
-    llvm::Type* var_type = type_ptr->operator()(*llvm_context);
-    if(var_type == nullptr){
-        stdlog.err() << "Error retrieving variable " << name << " type" << std::endl;
-        throw PARSE_ERR;
-    }
-    return llvm_irbuilder->CreateLoad(var_type, val, name.c_str());
-    
-}
-*/
 
 std::string ast_var_expr::get_expr_type() {
     return "var";
