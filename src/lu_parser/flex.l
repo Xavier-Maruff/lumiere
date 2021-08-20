@@ -24,7 +24,7 @@ unrecognised
 %option noyywrap nounput noinput batch debug
 
 int_lit [1-9]+[0-9]*
-flt_lit [0-9]?[1-9]*\.[0-9]*
+flt_lit [1-9]+[0-9]*\.[0-9]+
 string_lit (\"(?:[^"\\]|\\.)*\")|(\'(?:[^'\\]|\\.)*\')
 identifier [_a-zA-Z][_a-zA-Z0-9]*
 
@@ -40,11 +40,11 @@ identifier [_a-zA-Z][_a-zA-Z0-9]*
 [ \t\r]+            loc.step();
 \n+                 loc.lines(yyleng); loc.step();
 \/\/.*              {;}
-{int_lit}           {
-                        return yy::parser::make_INT_LIT(std::stoi(yytext), loc);
-                    }
 {flt_lit}           {
                         return yy::parser::make_FLT_LIT(std::stof(yytext), loc);
+                    }
+{int_lit}           {
+                        return yy::parser::make_INT_LIT(std::stoi(yytext), loc);
                     }
 {string_lit}        {
                         std::string yytext_str(yytext);
@@ -53,7 +53,7 @@ identifier [_a-zA-Z][_a-zA-Z0-9]*
                         return yy::parser::make_STR_LIT(yytext_str, loc);
                     }
 "lambda"            {
-                        store_symbol_type_map_to_buffer();
+                        //store_symbol_type_map_to_buffer();
                         return yy::parser::make_LAMBDA_KW(loc);
                     }
 "return"            return yy::parser::make_RETURN_KW(loc);

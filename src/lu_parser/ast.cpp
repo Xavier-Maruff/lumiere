@@ -116,8 +116,12 @@ llvm::Value* ast_var_expr::gen_global_def(){
     }
     //record the global var in the symbol table
     value_map[name] = global_var;
+    symbol_type_map[name] = cmp_node_type;
     global_symbol_map[name] = global_var;
+    global_symbol_type_map[name] = cmp_node_type;
+
     ret_val = global_var;
+
     declared_symbols.insert(name);
     defined_symbols.insert(name);
     return ret_val;
@@ -255,7 +259,6 @@ ast_int_expr::~ast_int_expr() {
 }
 
 llvm::Value* ast_int_expr::gen_code() {
-    // args: numbits, value, isSigned
     return llvm::ConstantInt::get(*llvm_context, llvm::APInt(64, value, true));
 }
 

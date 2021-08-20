@@ -34,7 +34,7 @@ double ftest5_check(double a) { return ftest1(ftest4(a, 1.0123, 200))+12.0; }
 double ftest6_check(double a) {return 12;}
 double ftest7_check(double a) {return (a+2)*3;}
 double ftest8_check() {return 10;}
-double ftest9_check() {return 1.2;}
+double ftest9_check() {return 1.0;}
 
 
 //Run funcs, check match

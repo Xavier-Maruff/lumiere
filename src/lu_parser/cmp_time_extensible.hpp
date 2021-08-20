@@ -85,6 +85,7 @@ extern std::map<std::string, llvm::Value*> value_map_buffer;
 //globals
 extern std::set<std::string> global_symbols;
 extern std::map<std::string, llvm::Value*> global_symbol_map;
+extern std::map<std::string, std::string> global_symbol_type_map;
 
 //declarations and definitions
 extern std::set<std::string> defined_symbols;

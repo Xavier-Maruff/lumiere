@@ -124,6 +124,7 @@ std::map<std::string, std::vector<std::string>> func_args_type_map_buffer = {};
 //global symbols is not affected by scope
 std::set<std::string> global_symbols = {};
 std::map<std::string, llvm::Value*> global_symbol_map = {};
+std::map<std::string, std::string> global_symbol_type_map = {};
 
 //symbols that have been declared and defined
 std::set<std::string> defined_symbols = {};
@@ -146,8 +147,12 @@ void store_tables_to_buffer(){
 //sister function to store_tables_to_buffer, called going to a shallower scope
 void load_tables_from_buffer(){
     symbol_type_map = symbol_type_map_buffer;
+
     value_map = value_map_buffer;
+    value_map.insert(global_symbol_map.begin(), global_symbol_map.end());
+
     func_args_type_map = func_args_type_map_buffer;
+
     defined_symbols = defined_symbols_buffer;
     declared_symbols = declared_symbols_buffer;
 
@@ -166,5 +171,6 @@ void store_symbol_type_map_to_buffer(){
 
 void load_symbol_type_map_from_buffer(){
     symbol_type_map = symbol_type_map_buffer;
+    symbol_type_map.insert(global_symbol_type_map.begin(), global_symbol_type_map.end());
     symbol_type_map_buffer.clear();
 }

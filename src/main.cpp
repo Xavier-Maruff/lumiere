@@ -24,7 +24,7 @@ int main(int argc, char* argv[]){
                 drv.parse();
                 
                 if(cli_args.no_output){
-                    stdlog() << "IR " << source_filename << ":" << std::endl;
+                    stdlog() << "LLVM IR " << source_filename << ":" << std::endl;
                     std::cout << drv.get_ir() << std::endl;
                 }
                 else drv.write_ir(cli_args.output_filename);

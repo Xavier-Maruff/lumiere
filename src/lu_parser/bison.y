@@ -228,7 +228,7 @@ lambda_dec: LAMBDA_KW IDENT IDENT OPEN_PAREN decs CLOSE_PAREN {
 
 lambda_def:  lambda_dec ARROW lambda_body {
                     $$ = make_ast_func_def_uptr($1, $3);
-                    load_symbol_type_map_from_buffer();
+                    //load_symbol_type_map_from_buffer();
                 }
             //| IDENT ASSIGN OPEN_PAREN decs CLOSE_PAREN ARROW lambda_body TODO:
 
@@ -295,16 +295,16 @@ expr: IDENT {
     | IDENT ASSIGN expr {
             DEBUG_LOGL(@1, "Assignment to mutable variable "+$1);
             //auto symbol_iter = declared_symbols.find($1);
-            auto symbol_type_iter = symbol_type_map.find($1);
-            if(symbol_type_iter != symbol_type_map.end()){
+            //auto symbol_type_iter = symbol_type_map.find($1);
+            //if(symbol_type_iter != symbol_type_map.end()){
                 ast_expr_uptr var_ref = make_ast_var_expr_uptr($1);
                 $$ = make_ast_bin_expr_uptr(OPER_ASSIGN, var_ref, $3);
                 DEBUG_LOGL(@1, "Binary expression");
-            }
-            else {
-                stdlog.err() << ANSI_CYAN << @1 << ANSI_RESET << "\t Assignment to undeclared variable " << $1 << std::endl;
-                throw PARSE_ERR;
-            }
+            //}
+            //else {
+            //    stdlog.err() << ANSI_CYAN << @1 << ANSI_RESET << "\t Assignment to undeclared variable " << $1 << std::endl;
+            //    throw PARSE_ERR;
+            //}
         }
 	//function call
     | IDENT OPEN_PAREN lambda_args CLOSE_PAREN {
