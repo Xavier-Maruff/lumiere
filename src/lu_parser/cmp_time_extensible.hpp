@@ -60,16 +60,22 @@ extern unary_oper_reduce_func_map_type unary_oper_reduce_func_map;
 
 //compile time types
 typedef std::function<llvm::Type*(llvm::LLVMContext&)> type_transform_func;
+//type function map (typename -> function returning correct type)
 typedef std::map<std::string, type_transform_func> type_map_type;
 //actual compile time type map
 extern type_map_type type_map;
 
+//symbol types (name -> typename)
 extern std::map<std::string, std::string> symbol_type_map;
+//function arg types (name -> {arg typenames})
 extern std::map<std::string, std::vector<std::string>> func_args_type_map;
 
 
 #define TYPE_MAP_ELEM(type_name, func_body) \
 {type_name, [](llvm::LLVMContext& ctx) -> llvm::Type* func_body}
+
+//primitive type constructors
+extern std::map<std::string, std::function<llvm::Value*(llvm::Value*)>> primitive_type_constructors;
 
 
 //named values
@@ -90,5 +96,9 @@ extern std::set<std::string> declared_symbols_buffer;
 
 void store_tables_to_buffer();
 void load_tables_from_buffer();
+
+//to be called when traversing scopes at ast codegen time
+void store_symbol_type_map_to_buffer();
+void load_symbol_type_map_from_buffer();
 
 #endif

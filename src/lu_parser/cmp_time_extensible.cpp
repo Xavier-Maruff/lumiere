@@ -157,3 +157,14 @@ void load_tables_from_buffer(){
     defined_symbols_buffer.clear();
     declared_symbols_buffer.clear();
 }
+
+
+void store_symbol_type_map_to_buffer(){
+    symbol_type_map_buffer = symbol_type_map;
+}
+
+
+void load_symbol_type_map_from_buffer(){
+    symbol_type_map = symbol_type_map_buffer;
+    symbol_type_map_buffer.clear();
+}

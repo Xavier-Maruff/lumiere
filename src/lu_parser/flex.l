@@ -53,6 +53,7 @@ identifier [_a-zA-Z][_a-zA-Z0-9]*
                         return yy::parser::make_STR_LIT(yytext_str, loc);
                     }
 "lambda"            {
+                        store_symbol_type_map_to_buffer();
                         return yy::parser::make_LAMBDA_KW(loc);
                     }
 "return"            return yy::parser::make_RETURN_KW(loc);

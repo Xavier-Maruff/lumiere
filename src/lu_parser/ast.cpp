@@ -71,7 +71,7 @@ ast_var_expr::ast_var_expr(std::string cmp_node_type_, std::string name_, bool i
     //if(type_iter == symbol_type_map.end()) symbol_type_map[name] = cmp_node_type;
 
     
-    //this might cause issue when travelling up through scope
+    //this might cause issue when travelling up through scope - unless buffering of symbol type map is implemented
     symbol_type_map[name] = cmp_node_type;
 }
 
@@ -94,6 +94,7 @@ void ast_var_expr::set_init_val(std::unique_ptr<ast_expr>& start_expr){
     init_val = std::move(start_expr);
 }
 
+//create the global definition
 llvm::Value* ast_var_expr::gen_global_def(){
     llvm::Value* ret_val = nullptr;
     llvm::Value* init_val_gen = init_val->gen_code();
@@ -119,18 +120,10 @@ llvm::Value* ast_var_expr::gen_global_def(){
     ret_val = global_var;
     declared_symbols.insert(name);
     defined_symbols.insert(name);
-    stdlog() << "Defined global var" << std::endl;
     return ret_val;
 }
 
 llvm::Value* ast_var_expr::gen_code(){
-
-    //TODO: this might not work
-    //auto type_iter = symbol_type_map.find(name);
-    //if(type_iter != symbol_type_map.end()) cmp_node_type = type_iter->second;
-    //else symbol_type_map[name] = cmp_node_type;
-
-    stdlog() << "Var " << name << " type at codegen: " << cmp_node_type << std::endl;
 
     llvm::Value* ret_val = nullptr;
     llvm::BasicBlock* parent_b = llvm_irbuilder->GetInsertBlock();
@@ -144,14 +137,15 @@ llvm::Value* ast_var_expr::gen_code(){
             is_global = true;
             global_symbols.insert(name);
             if(init_val == nullptr){
-                stdlog.warn() << "No initial value provided for global var " << name << ", added to global symbol table" << std::endl;
+                stdlog.warn() << "No initial value provided for global var " << name << ", init as default" << std::endl;
                 return nullptr;
+                //TODO: default type primitives
             }
             else {
                 //declare and define global var
                 //get the initial value
-                //TODO: move this to gen_global_def
                 ret_val = gen_global_def();
+                //maybe return retval here? TODO:
             }
         }
         else {
@@ -168,6 +162,9 @@ llvm::Value* ast_var_expr::gen_code(){
             ret_val = var_alloca;
 
             declared_symbols.insert(name);
+
+            //maybe not, test
+            return ret_val;
         }
     }
 
@@ -187,6 +184,7 @@ llvm::Value* ast_var_expr::gen_code(){
             llvm::Value* init_val_gen = init_val->gen_code();
             if(init_val_gen == nullptr) {
                 stdlog.err() << "Nullptr initial value after codegen for var " << name << std::endl;
+                throw PARSE_ERR;
             }
             llvm_irbuilder->CreateStore(init_val_gen, ret_val);
             defined_symbols.insert(name);
@@ -334,11 +332,28 @@ ast_bin_expr::~ast_bin_expr() {
 }
 
 llvm::Value* ast_bin_expr::gen_code() {
-    //get the value of the two adjacent nodes
-    llvm::Value* rhs_val = rhs->gen_code();
-    llvm::Value* lhs_val = lhs->gen_code();
-
     
+    llvm::Value* lhs_val;
+    llvm::Value* rhs_val;
+
+    //special case for assignment
+    if (opcode == OPER_ASSIGN) {
+        // Assignment requires the LHS to be an identifier.
+        ast_var_expr *lhs_raw = dynamic_cast<ast_var_expr*>(lhs.get());
+        if(lhs_raw == nullptr){
+            stdlog.err() << "Only variables can be assigned to" << std::endl;
+            throw PARSE_ERR;
+        }
+        lhs_val = value_map[lhs_raw->name];
+        if(declared_symbols.find(lhs_raw->name) == declared_symbols.end() || lhs_val == nullptr){
+            stdlog.err() << "Assignment to undeclared variable " << lhs_raw->name << std::endl;
+            throw PARSE_ERR;
+        }
+    }
+    else lhs_val = lhs->gen_code();
+    
+    rhs_val = rhs->gen_code();
+
     if (lhs_val == nullptr || rhs_val == nullptr) {
         stdlog.err() << "Nullptr node in binexpr" << std::endl;
         throw PARSE_ERR;
@@ -535,14 +550,15 @@ llvm::Function* ast_func_def::gen_code() {
     //value_map_buffer.clear();
     //value_map_buffer = value_map;
     store_tables_to_buffer();
-
     std::vector<std::string> arg_types = func_args_type_map[func_proto->name];
-    //value_map.clear();
     size_t arg_index = 0;
     for (auto& arg : llvm_f->args()) {
         llvm::AllocaInst* arg_alloca = insert_alloca_at_entry(llvm_f, arg.getName(), arg_types[arg_index]);
         llvm_irbuilder->CreateStore(&arg, arg_alloca);
-        value_map[std::string(arg.getName())] = arg_alloca;
+        std::string arg_name(arg.getName());
+        value_map[arg_name] = arg_alloca;
+        declared_symbols.insert(arg_name);
+        defined_symbols.insert(arg_name);
         arg_index++;
     }
 

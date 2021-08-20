@@ -66,9 +66,6 @@ class ast_func_block: public ast_block{
 
 //baked variable expression - TODO: mutable
 class ast_var_expr: public ast_expr{
-
-    llvm::Value* gen_global_def();
-
     public:
     static const expr_node_type var_expr_type;
     std::unique_ptr<ast_expr> init_val;
@@ -83,6 +80,7 @@ class ast_var_expr: public ast_expr{
     std::string get_expr_type() override;
     //TODO: will be deprecated after mutable vars are added
     void set_init_val(std::unique_ptr<ast_expr>& start_expr) override;
+    llvm::Value* gen_global_def();
 };
 
 //float expression

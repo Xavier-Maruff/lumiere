@@ -13,14 +13,13 @@ define double @mutate_a(double %b) {
 entry:
   %b1 = alloca double
   store double %b, double* %b1
+  store double 0x3FF3AE1480000000, double* @glob
   %a = alloca i64
   store i64 12, i64* %a
-  %a2 = load i64, i64* %a
+  %b2 = load double, double* %b1
   %a3 = load i64, i64* %a
-  %b4 = alloca double
-  %b5 = load double, double* %b4
   %0 = sitofp i64 %a3 to double
-  %addtmp = fadd double %b5, %0
+  %addtmp = fadd double %b2, %0
   ret double %addtmp
 }
 
@@ -28,21 +27,16 @@ define double @mutate_glob(double %a) {
 entry:
   %a1 = alloca double
   store double %a, double* %a1
-  %b = alloca double
-  %b2 = load double, double* %b
-  %a3 = alloca double
-  %a4 = load double, double* %a3
-  %addtmp = fadd double %a4, %b2
-  %calltmp = call double @mutate_a(double %addtmp)
-  %a5 = load double, double* %a3
-  ret double %a5
+  %a2 = load double, double* %a1
+  %calltmp = call double @mutate_a(double %a2)
+  %a3 = load double, double* %a1
+  ret double %a3
 }
 
 define i8* @stest(i8* %a) {
 entry:
   %a1 = alloca i8*
   store i8* %a, i8** %a1
-  %a2 = alloca i8*
-  %a3 = load i8*, i8** %a2
-  ret i8* %a3
+  %a2 = load i8*, i8** %a1
+  ret i8* %a2
 }
