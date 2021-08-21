@@ -191,6 +191,7 @@ class ast_func_proto: public ast_node{
     public:
     //args at dec
     std::vector<std::unique_ptr<ast_node>> args;
+    bool variadic;
     //function return type
     std::string return_type;
 

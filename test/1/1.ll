@@ -5,7 +5,7 @@ source_filename = "lumiere"
 @0 = private unnamed_addr constant [13 x i8] c"my name jeff\00", align 1
 @1 = private unnamed_addr constant [5 x i8] c"test\00", align 1
 
-define double @ftest1(double %a) {
+define double @ftest1(double %a, ...) {
 entry:
   %a1 = alloca double
   store double %a, double* %a1
@@ -66,10 +66,10 @@ entry:
   %a1 = alloca double
   store double %a, double* %a1
   %a2 = load double, double* %a1
-  %calltmp = call double @ftest4(double %a2, double 0x3FF0326180000000, i64 200)
-  %calltmp3 = call double @ftest1(double %calltmp)
+  %0 = call double @ftest4(double %a2, double 0x3FF1F7CEE0000000, i64 200)
+  %1 = call double (double, ...) @ftest1(double %0)
   %glob = load double, double* @glob
-  %addtmp = fadd double %calltmp3, %glob
+  %addtmp = fadd double %1, %glob
   ret double %addtmp
 }
 
@@ -126,8 +126,8 @@ entry:
 
 define i8* @stest3() {
 entry:
-  %calltmp = call i8* @stest2()
-  ret i8* %calltmp
+  %0 = call i8* @stest2()
+  ret i8* %0
 }
 
 define i8* @stest4() {

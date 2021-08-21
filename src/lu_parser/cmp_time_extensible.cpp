@@ -20,7 +20,9 @@ llvm::Value* llvm_reduce_unary_value_func::operator()(llvm::Value* target){retur
 type_map_type type_map = {
     TYPE_MAP_ELEM("float", {return llvm::Type::getDoubleTy(ctx);}),
     TYPE_MAP_ELEM("int", {return llvm::Type::getInt64Ty(ctx);}),
-    TYPE_MAP_ELEM("string", {return llvm::Type::getInt8PtrTy(ctx);})
+    TYPE_MAP_ELEM("string", {return llvm::Type::getInt8PtrTy(ctx);}),
+    TYPE_MAP_ELEM("void", {return llvm::Type::getVoidTy(ctx);}),
+    TYPE_MAP_ELEM("int32", {return llvm::Type::getInt32Ty(ctx);})
 };
 
 
@@ -147,6 +149,7 @@ void store_tables_to_buffer(){
 //sister function to store_tables_to_buffer, called going to a shallower scope
 void load_tables_from_buffer(){
     symbol_type_map = symbol_type_map_buffer;
+    symbol_type_map.insert(global_symbol_type_map.begin(), global_symbol_type_map.end());
 
     value_map = value_map_buffer;
     value_map.insert(global_symbol_map.begin(), global_symbol_map.end());

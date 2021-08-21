@@ -35,101 +35,103 @@ Grammar
 
    14 lambda_dec: "lambda" IDENT IDENT "(" decs ")"
    15           | "lambda" IDENT IDENT "(" ")"
+   16           | "lambda" IDENT IDENT "(" decs "..." ")"
 
-   16 lambda_def: lambda_dec "->" lambda_body
+   17 lambda_def: lambda_dec "->" lambda_body
 
-   17 lambda_body: expr
-   18            | lambda_block
+   18 lambda_body: expr
+   19            | lambda_block
 
-   19 lambda_block: "{" statements "return" expr "}"
-   20             | "{" "return" expr "}"
+   20 lambda_block: "{" statements "return" expr "}"
+   21             | "{" "return" expr "}"
 
-   21 expr: IDENT
-   22     | INT_LIT
-   23     | FLT_LIT
-   24     | STR_LIT
-   25     | "-" expr
-   26     | expr "+" expr
-   27     | expr "-" expr
-   28     | expr "*" expr
-   29     | expr "/" expr
-   30     | IDENT "=" expr
-   31     | IDENT "(" lambda_args ")"
-   32     | "(" expr ")"
+   22 expr: IDENT
+   23     | INT_LIT
+   24     | FLT_LIT
+   25     | STR_LIT
+   26     | "-" expr
+   27     | expr "+" expr
+   28     | expr "-" expr
+   29     | expr "*" expr
+   30     | expr "/" expr
+   31     | IDENT "=" expr
+   32     | IDENT "(" lambda_args ")"
+   33     | "(" expr ")"
 
-   33 lambda_args: expr
-   34            | lambda_args "," expr
-   35            | %empty
+   34 lambda_args: expr
+   35            | lambda_args "," expr
+   36            | %empty
 
 
 Terminals, with rules where they appear
 
     $end (0) 0
     error (256)
-    INT_LIT <int64_t> (258) 22
-    FLT_LIT <double> (259) 23
-    STR_LIT <std::string> (260) 24
-    IDENT <std::string> (261) 12 13 14 15 21 30 31
-    "+" (262) 26
-    "*" (263) 28
-    "-" (264) 25 27
-    "/" (265) 29
+    INT_LIT <int64_t> (258) 23
+    FLT_LIT <double> (259) 24
+    STR_LIT <std::string> (260) 25
+    IDENT <std::string> (261) 12 13 14 15 16 22 31 32
+    "+" (262) 27
+    "*" (263) 29
+    "-" (264) 26 28
+    "/" (265) 30
     "%" (266)
-    "(" (267) 14 15 31 32
-    ")" (268) 14 15 31 32
-    "lambda" (269) 14 15
-    "=" (270) 13 30
+    "(" (267) 14 15 16 32 33
+    ")" (268) 14 15 16 32 33
+    "lambda" (269) 14 15 16
+    "=" (270) 13 31
     "==" (271)
-    "," (272) 9 34
-    "->" (273) 16
-    "{" (274) 19 20
-    "}" (275) 19 20
-    "return" (276) 19 20
-    UNEG (277)
-    EXPR_GROUP (278)
-    DECL_TOK (279)
+    "," (272) 9 35
+    "->" (273) 17
+    "{" (274) 20 21
+    "}" (275) 20 21
+    "return" (276) 20 21
+    "..." (277) 16
+    UNEG (278)
+    EXPR_GROUP (279)
+    DECL_TOK (280)
 
 
 Nonterminals, with rules where they appear
 
-    $accept (25)
+    $accept (26)
         on left: 0
-    program (26)
+    program (27)
         on left: 1 2
         on right: 0
-    statements <std::vector<ast_node_uptr>> (27)
+    statements <std::vector<ast_node_uptr>> (28)
         on left: 3 4
-        on right: 2 4 19
-    statement <ast_node_uptr> (28)
+        on right: 2 4 20
+    statement <ast_node_uptr> (29)
         on left: 5 6 7
         on right: 3 4
-    decs <std::vector<ast_node_uptr>> (29)
+    decs <std::vector<ast_node_uptr>> (30)
         on left: 8 9
-        on right: 9 14
-    dec <ast_node_uptr> (30)
+        on right: 9 14 16
+    dec <ast_node_uptr> (31)
         on left: 10 11
         on right: 5 8 9
-    var_dec <ast_expr_uptr> (31)
+    var_dec <ast_expr_uptr> (32)
         on left: 12 13
         on right: 10
-    lambda_dec <ast_func_proto_uptr> (32)
-        on left: 14 15
-        on right: 11 16
-    lambda_def <ast_func_def_uptr> (33)
-        on left: 16
+    lambda_dec <ast_func_proto_uptr> (33)
+        on left: 14 15 16
+        on right: 11 17
+    lambda_def <ast_func_def_uptr> (34)
+        on left: 17
         on right: 7
-    lambda_body <ast_node_uptr> (34)
-        on left: 17 18
-        on right: 16
-    lambda_block <ast_func_block_uptr> (35)
-        on left: 19 20
-        on right: 18
-    expr <ast_expr_uptr> (36)
-        on left: 21 22 23 24 25 26 27 28 29 30 31 32
-        on right: 6 13 17 19 20 25 26 27 28 29 30 32 33 34
-    lambda_args <std::vector<ast_expr_uptr>> (37)
-        on left: 33 34 35
-        on right: 31 34
+    lambda_body <ast_node_uptr> (35)
+        on left: 18 19
+        on right: 17
+    lambda_block <ast_func_block_uptr> (36)
+        on left: 20 21
+        on right: 19
+    expr <ast_expr_uptr> (37)
+        on left: 22 23 24 25 26 27 28 29 30 31 32 33
+        on right: 6 13 18 20 21 26 27 28 29 30 31 33 34 35
+    lambda_args <std::vector<ast_expr_uptr>> (38)
+        on left: 34 35 36
+        on right: 32 35
 
 
 State 0
@@ -158,43 +160,43 @@ State 0
 
 State 1
 
-   22 expr: INT_LIT •
-
-    $default  reduce using rule 22 (expr)
-
-
-State 2
-
-   23 expr: FLT_LIT •
+   23 expr: INT_LIT •
 
     $default  reduce using rule 23 (expr)
 
 
-State 3
+State 2
 
-   24 expr: STR_LIT •
+   24 expr: FLT_LIT •
 
     $default  reduce using rule 24 (expr)
+
+
+State 3
+
+   25 expr: STR_LIT •
+
+    $default  reduce using rule 25 (expr)
 
 
 State 4
 
    12 var_dec: IDENT • IDENT
    13        | IDENT • IDENT "=" expr
-   21 expr: IDENT •
-   30     | IDENT • "=" expr
-   31     | IDENT • "(" lambda_args ")"
+   22 expr: IDENT •
+   31     | IDENT • "=" expr
+   32     | IDENT • "(" lambda_args ")"
 
     IDENT  shift, and go to state 16
     "("    shift, and go to state 17
     "="    shift, and go to state 18
 
-    "("       [reduce using rule 21 (expr)]
-    $default  reduce using rule 21 (expr)
+    "("       [reduce using rule 22 (expr)]
+    $default  reduce using rule 22 (expr)
 
     shift/reduce conflict on token "(":
-       21 expr: IDENT •
-       31 expr: IDENT • "(" lambda_args ")"
+       22 expr: IDENT •
+       32 expr: IDENT • "(" lambda_args ")"
       Example: IDENT • "(" expr ")"
       Shift derivation
         statements
@@ -213,7 +215,7 @@ State 4
 
 State 5
 
-   25 expr: "-" • expr
+   26 expr: "-" • expr
 
     INT_LIT  shift, and go to state 1
     FLT_LIT  shift, and go to state 2
@@ -227,7 +229,7 @@ State 5
 
 State 6
 
-   32 expr: "(" • expr ")"
+   33 expr: "(" • expr ")"
 
     INT_LIT  shift, and go to state 1
     FLT_LIT  shift, and go to state 2
@@ -243,6 +245,7 @@ State 7
 
    14 lambda_dec: "lambda" • IDENT IDENT "(" decs ")"
    15           | "lambda" • IDENT IDENT "(" ")"
+   16           | "lambda" • IDENT IDENT "(" decs "..." ")"
 
     IDENT  shift, and go to state 22
 
@@ -301,7 +304,7 @@ State 12
 State 13
 
    11 dec: lambda_dec •
-   16 lambda_def: lambda_dec • "->" lambda_body
+   17 lambda_def: lambda_dec • "->" lambda_body
 
     "->"  shift, and go to state 25
 
@@ -318,10 +321,10 @@ State 14
 State 15
 
     6 statement: expr •
-   26 expr: expr • "+" expr
-   27     | expr • "-" expr
-   28     | expr • "*" expr
-   29     | expr • "/" expr
+   27 expr: expr • "+" expr
+   28     | expr • "-" expr
+   29     | expr • "*" expr
+   30     | expr • "/" expr
 
     "+"  shift, and go to state 26
     "*"  shift, and go to state 27
@@ -333,7 +336,7 @@ State 15
 
     shift/reduce conflict on token "-":
         6 statement: expr •
-       27 expr: expr • "-" expr
+       28 expr: expr • "-" expr
       Example: expr • "-" expr
       Shift derivation
         statements
@@ -360,7 +363,7 @@ State 16
 
 State 17
 
-   31 expr: IDENT "(" • lambda_args ")"
+   32 expr: IDENT "(" • lambda_args ")"
 
     INT_LIT  shift, and go to state 1
     FLT_LIT  shift, and go to state 2
@@ -369,7 +372,7 @@ State 17
     "-"      shift, and go to state 5
     "("      shift, and go to state 6
 
-    $default  reduce using rule 35 (lambda_args)
+    $default  reduce using rule 36 (lambda_args)
 
     expr         go to state 31
     lambda_args  go to state 32
@@ -377,7 +380,7 @@ State 17
 
 State 18
 
-   30 expr: IDENT "=" • expr
+   31 expr: IDENT "=" • expr
 
     INT_LIT  shift, and go to state 1
     FLT_LIT  shift, and go to state 2
@@ -391,19 +394,19 @@ State 18
 
 State 19
 
-   21 expr: IDENT •
-   30     | IDENT • "=" expr
-   31     | IDENT • "(" lambda_args ")"
+   22 expr: IDENT •
+   31     | IDENT • "=" expr
+   32     | IDENT • "(" lambda_args ")"
 
     "("  shift, and go to state 17
     "="  shift, and go to state 18
 
-    "("       [reduce using rule 21 (expr)]
-    $default  reduce using rule 21 (expr)
+    "("       [reduce using rule 22 (expr)]
+    $default  reduce using rule 22 (expr)
 
     shift/reduce conflict on token "(":
-       21 expr: IDENT •
-       31 expr: IDENT • "(" lambda_args ")"
+       22 expr: IDENT •
+       32 expr: IDENT • "(" lambda_args ")"
       Example: "-" IDENT • "(" expr ")"
       Shift derivation
         statements
@@ -424,22 +427,22 @@ State 19
 
 State 20
 
-   25 expr: "-" expr •
-   26     | expr • "+" expr
-   27     | expr • "-" expr
-   28     | expr • "*" expr
-   29     | expr • "/" expr
+   26 expr: "-" expr •
+   27     | expr • "+" expr
+   28     | expr • "-" expr
+   29     | expr • "*" expr
+   30     | expr • "/" expr
 
-    $default  reduce using rule 25 (expr)
+    $default  reduce using rule 26 (expr)
 
 
 State 21
 
-   26 expr: expr • "+" expr
-   27     | expr • "-" expr
-   28     | expr • "*" expr
-   29     | expr • "/" expr
-   32     | "(" expr • ")"
+   27 expr: expr • "+" expr
+   28     | expr • "-" expr
+   29     | expr • "*" expr
+   30     | expr • "/" expr
+   33     | "(" expr • ")"
 
     "+"  shift, and go to state 26
     "*"  shift, and go to state 27
@@ -452,6 +455,7 @@ State 22
 
    14 lambda_dec: "lambda" IDENT • IDENT "(" decs ")"
    15           | "lambda" IDENT • IDENT "(" ")"
+   16           | "lambda" IDENT • IDENT "(" decs "..." ")"
 
     IDENT  shift, and go to state 35
 
@@ -472,7 +476,7 @@ State 24
 
 State 25
 
-   16 lambda_def: lambda_dec "->" • lambda_body
+   17 lambda_def: lambda_dec "->" • lambda_body
 
     INT_LIT  shift, and go to state 1
     FLT_LIT  shift, and go to state 2
@@ -489,7 +493,7 @@ State 25
 
 State 26
 
-   26 expr: expr "+" • expr
+   27 expr: expr "+" • expr
 
     INT_LIT  shift, and go to state 1
     FLT_LIT  shift, and go to state 2
@@ -503,7 +507,7 @@ State 26
 
 State 27
 
-   28 expr: expr "*" • expr
+   29 expr: expr "*" • expr
 
     INT_LIT  shift, and go to state 1
     FLT_LIT  shift, and go to state 2
@@ -517,7 +521,7 @@ State 27
 
 State 28
 
-   27 expr: expr "-" • expr
+   28 expr: expr "-" • expr
 
     INT_LIT  shift, and go to state 1
     FLT_LIT  shift, and go to state 2
@@ -531,7 +535,7 @@ State 28
 
 State 29
 
-   29 expr: expr "/" • expr
+   30 expr: expr "/" • expr
 
     INT_LIT  shift, and go to state 1
     FLT_LIT  shift, and go to state 2
@@ -559,24 +563,24 @@ State 30
 
 State 31
 
-   26 expr: expr • "+" expr
-   27     | expr • "-" expr
-   28     | expr • "*" expr
-   29     | expr • "/" expr
-   33 lambda_args: expr •
+   27 expr: expr • "+" expr
+   28     | expr • "-" expr
+   29     | expr • "*" expr
+   30     | expr • "/" expr
+   34 lambda_args: expr •
 
     "+"  shift, and go to state 26
     "*"  shift, and go to state 27
     "-"  shift, and go to state 28
     "/"  shift, and go to state 29
 
-    $default  reduce using rule 33 (lambda_args)
+    $default  reduce using rule 34 (lambda_args)
 
 
 State 32
 
-   31 expr: IDENT "(" lambda_args • ")"
-   34 lambda_args: lambda_args • "," expr
+   32 expr: IDENT "(" lambda_args • ")"
+   35 lambda_args: lambda_args • "," expr
 
     ")"  shift, and go to state 45
     ","  shift, and go to state 46
@@ -584,39 +588,40 @@ State 32
 
 State 33
 
-   26 expr: expr • "+" expr
-   27     | expr • "-" expr
-   28     | expr • "*" expr
-   29     | expr • "/" expr
-   30     | IDENT "=" expr •
+   27 expr: expr • "+" expr
+   28     | expr • "-" expr
+   29     | expr • "*" expr
+   30     | expr • "/" expr
+   31     | IDENT "=" expr •
 
     "+"  shift, and go to state 26
     "*"  shift, and go to state 27
     "-"  shift, and go to state 28
     "/"  shift, and go to state 29
 
-    $default  reduce using rule 30 (expr)
+    $default  reduce using rule 31 (expr)
 
 
 State 34
 
-   32 expr: "(" expr ")" •
+   33 expr: "(" expr ")" •
 
-    $default  reduce using rule 32 (expr)
+    $default  reduce using rule 33 (expr)
 
 
 State 35
 
    14 lambda_dec: "lambda" IDENT IDENT • "(" decs ")"
    15           | "lambda" IDENT IDENT • "(" ")"
+   16           | "lambda" IDENT IDENT • "(" decs "..." ")"
 
     "("  shift, and go to state 47
 
 
 State 36
 
-   19 lambda_block: "{" • statements "return" expr "}"
-   20             | "{" • "return" expr "}"
+   20 lambda_block: "{" • statements "return" expr "}"
+   21             | "{" • "return" expr "}"
 
     INT_LIT   shift, and go to state 1
     FLT_LIT   shift, and go to state 2
@@ -638,37 +643,37 @@ State 36
 
 State 37
 
-   16 lambda_def: lambda_dec "->" lambda_body •
+   17 lambda_def: lambda_dec "->" lambda_body •
 
-    $default  reduce using rule 16 (lambda_def)
+    $default  reduce using rule 17 (lambda_def)
 
 
 State 38
 
-   18 lambda_body: lambda_block •
+   19 lambda_body: lambda_block •
 
-    $default  reduce using rule 18 (lambda_body)
+    $default  reduce using rule 19 (lambda_body)
 
 
 State 39
 
-   17 lambda_body: expr •
-   26 expr: expr • "+" expr
-   27     | expr • "-" expr
-   28     | expr • "*" expr
-   29     | expr • "/" expr
+   18 lambda_body: expr •
+   27 expr: expr • "+" expr
+   28     | expr • "-" expr
+   29     | expr • "*" expr
+   30     | expr • "/" expr
 
     "+"  shift, and go to state 26
     "*"  shift, and go to state 27
     "-"  shift, and go to state 28
     "/"  shift, and go to state 29
 
-    "-"       [reduce using rule 17 (lambda_body)]
-    $default  reduce using rule 17 (lambda_body)
+    "-"       [reduce using rule 18 (lambda_body)]
+    $default  reduce using rule 18 (lambda_body)
 
     shift/reduce conflict on token "-":
-       17 lambda_body: expr •
-       27 expr: expr • "-" expr
+       18 lambda_body: expr •
+       28 expr: expr • "-" expr
       Example: lambda_dec "->" expr • "-" expr
       Shift derivation
         statements
@@ -689,36 +694,11 @@ State 39
 
 State 40
 
-   26 expr: expr • "+" expr
-   26     | expr "+" expr •
-   27     | expr • "-" expr
-   28     | expr • "*" expr
-   29     | expr • "/" expr
-
-    "*"  shift, and go to state 27
-    "/"  shift, and go to state 29
-
-    $default  reduce using rule 26 (expr)
-
-
-State 41
-
-   26 expr: expr • "+" expr
-   27     | expr • "-" expr
-   28     | expr • "*" expr
-   28     | expr "*" expr •
-   29     | expr • "/" expr
-
-    $default  reduce using rule 28 (expr)
-
-
-State 42
-
-   26 expr: expr • "+" expr
-   27     | expr • "-" expr
-   27     | expr "-" expr •
-   28     | expr • "*" expr
-   29     | expr • "/" expr
+   27 expr: expr • "+" expr
+   27     | expr "+" expr •
+   28     | expr • "-" expr
+   29     | expr • "*" expr
+   30     | expr • "/" expr
 
     "*"  shift, and go to state 27
     "/"  shift, and go to state 29
@@ -726,24 +706,49 @@ State 42
     $default  reduce using rule 27 (expr)
 
 
-State 43
+State 41
 
-   26 expr: expr • "+" expr
-   27     | expr • "-" expr
-   28     | expr • "*" expr
-   29     | expr • "/" expr
-   29     | expr "/" expr •
+   27 expr: expr • "+" expr
+   28     | expr • "-" expr
+   29     | expr • "*" expr
+   29     | expr "*" expr •
+   30     | expr • "/" expr
 
     $default  reduce using rule 29 (expr)
+
+
+State 42
+
+   27 expr: expr • "+" expr
+   28     | expr • "-" expr
+   28     | expr "-" expr •
+   29     | expr • "*" expr
+   30     | expr • "/" expr
+
+    "*"  shift, and go to state 27
+    "/"  shift, and go to state 29
+
+    $default  reduce using rule 28 (expr)
+
+
+State 43
+
+   27 expr: expr • "+" expr
+   28     | expr • "-" expr
+   29     | expr • "*" expr
+   30     | expr • "/" expr
+   30     | expr "/" expr •
+
+    $default  reduce using rule 30 (expr)
 
 
 State 44
 
    13 var_dec: IDENT IDENT "=" expr •
-   26 expr: expr • "+" expr
-   27     | expr • "-" expr
-   28     | expr • "*" expr
-   29     | expr • "/" expr
+   27 expr: expr • "+" expr
+   28     | expr • "-" expr
+   29     | expr • "*" expr
+   30     | expr • "/" expr
 
     "+"  shift, and go to state 26
     "*"  shift, and go to state 27
@@ -755,14 +760,14 @@ State 44
 
 State 45
 
-   31 expr: IDENT "(" lambda_args ")" •
+   32 expr: IDENT "(" lambda_args ")" •
 
-    $default  reduce using rule 31 (expr)
+    $default  reduce using rule 32 (expr)
 
 
 State 46
 
-   34 lambda_args: lambda_args "," • expr
+   35 lambda_args: lambda_args "," • expr
 
     INT_LIT  shift, and go to state 1
     FLT_LIT  shift, and go to state 2
@@ -778,6 +783,7 @@ State 47
 
    14 lambda_dec: "lambda" IDENT IDENT "(" • decs ")"
    15           | "lambda" IDENT IDENT "(" • ")"
+   16           | "lambda" IDENT IDENT "(" • decs "..." ")"
 
     IDENT     shift, and go to state 51
     ")"       shift, and go to state 52
@@ -791,7 +797,7 @@ State 47
 
 State 48
 
-   20 lambda_block: "{" "return" • expr "}"
+   21 lambda_block: "{" "return" • expr "}"
 
     INT_LIT  shift, and go to state 1
     FLT_LIT  shift, and go to state 2
@@ -806,7 +812,7 @@ State 48
 State 49
 
     4 statements: statements • statement
-   19 lambda_block: "{" statements • "return" expr "}"
+   20 lambda_block: "{" statements • "return" expr "}"
 
     INT_LIT   shift, and go to state 1
     FLT_LIT   shift, and go to state 2
@@ -827,18 +833,18 @@ State 49
 
 State 50
 
-   26 expr: expr • "+" expr
-   27     | expr • "-" expr
-   28     | expr • "*" expr
-   29     | expr • "/" expr
-   34 lambda_args: lambda_args "," expr •
+   27 expr: expr • "+" expr
+   28     | expr • "-" expr
+   29     | expr • "*" expr
+   30     | expr • "/" expr
+   35 lambda_args: lambda_args "," expr •
 
     "+"  shift, and go to state 26
     "*"  shift, and go to state 27
     "-"  shift, and go to state 28
     "/"  shift, and go to state 29
 
-    $default  reduce using rule 34 (lambda_args)
+    $default  reduce using rule 35 (lambda_args)
 
 
 State 51
@@ -860,9 +866,11 @@ State 53
 
     9 decs: decs • "," dec
    14 lambda_dec: "lambda" IDENT IDENT "(" decs • ")"
+   16           | "lambda" IDENT IDENT "(" decs • "..." ")"
 
-    ")"  shift, and go to state 58
-    ","  shift, and go to state 59
+    ")"    shift, and go to state 58
+    ","    shift, and go to state 59
+    "..."  shift, and go to state 60
 
 
 State 54
@@ -881,22 +889,22 @@ State 55
 
 State 56
 
-   20 lambda_block: "{" "return" expr • "}"
-   26 expr: expr • "+" expr
-   27     | expr • "-" expr
-   28     | expr • "*" expr
-   29     | expr • "/" expr
+   21 lambda_block: "{" "return" expr • "}"
+   27 expr: expr • "+" expr
+   28     | expr • "-" expr
+   29     | expr • "*" expr
+   30     | expr • "/" expr
 
     "+"  shift, and go to state 26
     "*"  shift, and go to state 27
     "-"  shift, and go to state 28
     "/"  shift, and go to state 29
-    "}"  shift, and go to state 60
+    "}"  shift, and go to state 61
 
 
 State 57
 
-   19 lambda_block: "{" statements "return" • expr "}"
+   20 lambda_block: "{" statements "return" • expr "}"
 
     INT_LIT  shift, and go to state 1
     FLT_LIT  shift, and go to state 2
@@ -905,7 +913,7 @@ State 57
     "-"      shift, and go to state 5
     "("      shift, and go to state 6
 
-    expr  go to state 61
+    expr  go to state 62
 
 
 State 58
@@ -922,42 +930,56 @@ State 59
     IDENT     shift, and go to state 51
     "lambda"  shift, and go to state 7
 
-    dec         go to state 62
+    dec         go to state 63
     var_dec     go to state 12
     lambda_dec  go to state 55
 
 
 State 60
 
-   20 lambda_block: "{" "return" expr "}" •
+   16 lambda_dec: "lambda" IDENT IDENT "(" decs "..." • ")"
 
-    $default  reduce using rule 20 (lambda_block)
+    ")"  shift, and go to state 64
 
 
 State 61
 
-   19 lambda_block: "{" statements "return" expr • "}"
-   26 expr: expr • "+" expr
-   27     | expr • "-" expr
-   28     | expr • "*" expr
-   29     | expr • "/" expr
+   21 lambda_block: "{" "return" expr "}" •
+
+    $default  reduce using rule 21 (lambda_block)
+
+
+State 62
+
+   20 lambda_block: "{" statements "return" expr • "}"
+   27 expr: expr • "+" expr
+   28     | expr • "-" expr
+   29     | expr • "*" expr
+   30     | expr • "/" expr
 
     "+"  shift, and go to state 26
     "*"  shift, and go to state 27
     "-"  shift, and go to state 28
     "/"  shift, and go to state 29
-    "}"  shift, and go to state 63
+    "}"  shift, and go to state 65
 
 
-State 62
+State 63
 
     9 decs: decs "," dec •
 
     $default  reduce using rule 9 (decs)
 
 
-State 63
+State 64
 
-   19 lambda_block: "{" statements "return" expr "}" •
+   16 lambda_dec: "lambda" IDENT IDENT "(" decs "..." ")" •
 
-    $default  reduce using rule 19 (lambda_block)
+    $default  reduce using rule 16 (lambda_dec)
+
+
+State 65
+
+   20 lambda_block: "{" statements "return" expr "}" •
+
+    $default  reduce using rule 20 (lambda_block)

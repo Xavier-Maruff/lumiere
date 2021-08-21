@@ -18,6 +18,8 @@ extern "C" {
     double ftest8();
     double ftest9();
 
+    extern double glob;
+
     const char* stest1(const char*);
     const char* stest2();
     const char* stest3();
@@ -26,14 +28,14 @@ extern "C" {
 
 //Source of truth
 
-double ftest1_check(double a) { return -a * 2.0 + 12; }
+double ftest1_check(double a) { return -a * 2.0 + 12.0; }
 double ftest2_check(double a) { return a * 2.0 + -3.0 / 2.0; }
 double ftest3_check(double a) { return a - 12.0; }
 double ftest4_check(double a, double y, signed long p) { return a * p - p * y + a / -y; }
-double ftest5_check(double a) { return ftest1(ftest4(a, 1.0123, 200))+12.0; }
-double ftest6_check(double a) {return 12;}
-double ftest7_check(double a) {return (a+2)*3;}
-double ftest8_check() {return 10;}
+double ftest5_check(double a) { return ftest1(ftest4(a, 1.123, 200))+12.0; }
+double ftest6_check(double a) {return 12.0;}
+double ftest7_check(double a) {return (a+2.0)*3.0;}
+double ftest8_check() {return 10.0;}
 double ftest9_check() {return 1.0;}
 
 
@@ -82,6 +84,7 @@ int lev_dist(std::string s1, std::string s2) {
     delete[] dist;
 }
 
+//check pass or fail
 std::string check_res(std::string actual, std::string expected) {
     int lev_dist_cmp = lev_dist(actual, expected);
     std::stringstream lev_dist_stream;
@@ -97,6 +100,11 @@ std::string check_res(std::string actual, std::string expected) {
 template<typename T>
 inline void push_string(std::vector<std::string>& vect, T elem) {
     vect.push_back(std::to_string(elem));
+}
+
+void print_char_ptr(const char* str){
+    std::cout << str << std::endl;
+    return;
 }
 
 int main(int argc, char* argv[]) {

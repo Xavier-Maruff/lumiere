@@ -308,6 +308,12 @@ ast_string_expr::~ast_string_expr() {
 //get ref to string value
 //TODO: this is segfaulting in global insert
 llvm::Value* ast_string_expr::gen_code() {
+    llvm::BasicBlock* parent_b = llvm_irbuilder->GetInsertBlock();
+    if(parent_b == nullptr){
+        stdlog.warn() << "Creating global strings not yet implemented" << std::endl;
+        //return llvm_irbuilder->
+        return nullptr;
+    }
     return llvm_irbuilder->CreateGlobalStringPtr(llvm::StringRef(value));
 }
 
@@ -460,7 +466,9 @@ llvm::Value* ast_func_call_expr::gen_code() {
         arg_values.push_back(arg_code_gen);
     }
 
-    return llvm_irbuilder->CreateCall(f_callee, arg_values, "calltmp");
+    //return llvm_irbuilder->CreateCall(f_callee, arg_values, "calltmp");
+    if(get_expr_type() == "void") return llvm_irbuilder->CreateCall(f_callee, arg_values);
+    else return llvm_irbuilder->CreateCall(f_callee, arg_values);
 }
 
 std::string ast_func_call_expr::get_expr_type() {
@@ -474,7 +482,7 @@ const expr_node_type ast_func_call_expr::func_call_expr_type = FUNC_CALL_EXPR_NO
 
 //function prototype
 ast_func_proto::ast_func_proto(std::string name_, std::vector<std::unique_ptr<ast_node>>& args_, std::string return_type_) :
-    ast_node(), args(std::move(args_)), return_type(return_type_) {
+    ast_node(), args(std::move(args_)), return_type(return_type_), variadic(false) {
     name = name_;
     symbol_type_map[name] = return_type;
     func_args_type_map[name] = {};
@@ -485,7 +493,7 @@ ast_func_proto::ast_func_proto(std::string name_, std::vector<std::unique_ptr<as
 }
 
 ast_func_proto::ast_func_proto(std::string name_, std::string return_type_) :
-ast_node(), return_type(return_type_) {
+ast_node(), return_type(return_type_), variadic(false) {
     name = name_;
     symbol_type_map[name] = return_type;
     func_args_type_map[name] = {};
@@ -504,8 +512,8 @@ llvm::Function* ast_func_proto::gen_code() {
         //get the arg type as an llvm::Type*
         arg_llvm_types.push_back(type_map[arg->cmp_node_type](*llvm_context));
     }
-    //generate function type                                      might need this as true, TODO:
-    llvm::FunctionType* f_llvm_type = llvm::FunctionType::get(type_map[return_type](*llvm_context), arg_llvm_types, false);
+    //generate function type                                                                                   //TODO: varargs functions
+    llvm::FunctionType* f_llvm_type = llvm::FunctionType::get(type_map[return_type](*llvm_context), arg_llvm_types, variadic);
     llvm::Function* f_llvm = llvm::Function::Create(f_llvm_type, llvm::Function::ExternalLinkage, name, llvm_module.get());
 
     uint arg_index = 0;

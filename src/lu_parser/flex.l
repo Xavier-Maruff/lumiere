@@ -70,6 +70,7 @@ identifier [_a-zA-Z][_a-zA-Z0-9]*
 "-"                 return yy::parser::make_NEG(loc);
 "*"                 return yy::parser::make_STAR(loc);
 "/"                 return yy::parser::make_SLASH(loc);
+"..."               return yy::parser::make_ELLIPS(loc);
 <<EOF>>             return yy::parser::make_YYEOF(loc);
 .                   throw yy::parser::syntax_error(loc, "Syntax error: unrecognised token "+std::string(yytext));
 

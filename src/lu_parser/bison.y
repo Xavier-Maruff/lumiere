@@ -122,7 +122,7 @@
 %token <std::string> IDENT
 %token ADD "+" STAR "*" NEG "-" SLASH "/" MOD "%" OPEN_PAREN "(" CLOSE_PAREN ")"
 %token LAMBDA_KW "lambda" ASSIGN "=" EQUIV "==" COMMA "," ARROW "->" OPEN_BRACE "{"
-%token CLOSE_BRACE "}" RETURN_KW "return"
+%token CLOSE_BRACE "}" RETURN_KW "return" ELLIPS "..."
 
 %type <ast_expr_uptr> expr;
 %type <ast_func_proto_uptr> lambda_dec;
@@ -224,6 +224,11 @@ lambda_dec: LAMBDA_KW IDENT IDENT OPEN_PAREN decs CLOSE_PAREN {
             | LAMBDA_KW IDENT IDENT OPEN_PAREN CLOSE_PAREN {
                             DEBUG_LOGL(@1, "Noarg function "+$3+" returning a "+$2);
                             $$ = make_ast_func_proto_uptr($3, $2);
+                        }
+            | LAMBDA_KW IDENT IDENT OPEN_PAREN decs ELLIPS CLOSE_PAREN {
+                            DEBUG_LOGL(@1, "Variadic function "+$3+" returning a "+$2);
+                            $$ = make_ast_func_proto_uptr($3, $5, $2);
+                            $$->variadic = true;
                         }
 
 lambda_def:  lambda_dec ARROW lambda_body {
