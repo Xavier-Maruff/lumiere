@@ -94,8 +94,16 @@
         return ast_func_block_uptr(new ast_func_block(children, return_expr));
     }
 
+    ast_func_block_uptr make_ast_func_block_uptr(std::vector<ast_node_uptr>& children){
+        return ast_func_block_uptr(new ast_func_block(children));
+    }
+
     ast_func_block_uptr make_ast_func_block_uptr(ast_expr_uptr& return_expr){
         return ast_func_block_uptr(new ast_func_block(return_expr));
+    }
+
+    ast_func_block_uptr make_ast_func_block_uptr(){
+        return ast_func_block_uptr(new ast_func_block());
     }
 
     ast_func_def_uptr make_ast_func_def_uptr(ast_func_proto_uptr& func_proto, ast_node_uptr& func_body){
@@ -205,33 +213,33 @@ dec: var_dec {
         }
 
 var_dec: IDENT IDENT %prec DECL_TOK{
-                        //DEBUG_LOGL(@1, "Assignment to new variable "+$2+" of type "+$1);
+                        //DEBUG_LOGL(@$, "Assignment to new variable "+$2+" of type "+$1);
                         $$ = make_ast_var_expr_uptr($1, $2);
-                        node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
-                        DEBUG_LOGL(@1, $1+" variable declaration "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
+                        node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
+                        DEBUG_LOGL(@$, $1+" variable declaration "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
                 }
         | IDENT IDENT ASSIGN expr{
-                //DEBUG_LOGL(@1, "Assignment to new variable "+$2+" of type "+$1);
+                //DEBUG_LOGL(@$, "Assignment to new variable "+$2+" of type "+$1);
                 $$ = make_ast_var_expr_uptr($1, $2);
-                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
                 $$->set_init_val($4);
-                DEBUG_LOGL(@1, $1+" variable initial assignment "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
+                DEBUG_LOGL(@$, $1+" variable initial assignment "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
             }
 
 lambda_dec: LAMBDA_KW IDENT IDENT OPEN_PAREN decs CLOSE_PAREN {
-                            DEBUG_LOGL(@1, "Function "+$3+" returning a "+$2);
+                            DEBUG_LOGL(@$, "Function "+$3+" returning a "+$2);
                             $$ = make_ast_func_proto_uptr($3, $5, $2);
-                            node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
+                            node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
                         }
             | LAMBDA_KW IDENT IDENT OPEN_PAREN CLOSE_PAREN {
-                            DEBUG_LOGL(@1, "Noarg function "+$3+" returning a "+$2);
+                            DEBUG_LOGL(@$, "Noarg function "+$3+" returning a "+$2);
                             $$ = make_ast_func_proto_uptr($3, $2);
-                            node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
+                            node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
                         }
             | LAMBDA_KW IDENT IDENT OPEN_PAREN decs ELLIPS CLOSE_PAREN {
-                            DEBUG_LOGL(@1, "Variadic function "+$3+" returning a "+$2);
+                            DEBUG_LOGL(@$, "Variadic function "+$3+" returning a "+$2);
                             $$ = make_ast_func_proto_uptr($3, $5, $2);
-                            node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
+                            node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
                             $$->variadic = true;
                         }
 
@@ -242,100 +250,110 @@ lambda_def:  lambda_dec ARROW lambda_body {
             //| IDENT ASSIGN OPEN_PAREN decs CLOSE_PAREN ARROW lambda_body TODO:
 
 lambda_body: expr {
-                    DEBUG_LOGL(@1, "Lambda expression");
+                    DEBUG_LOGL(@$, "Lambda expression");
                     $$ = std::move($1);
                 }
             | lambda_block  {
-                    DEBUG_LOGL(@1, "Lambda body");
+                    DEBUG_LOGL(@$, "Lambda body");
                     $$ = std::move($1);
                 }
             
 
 lambda_block: OPEN_BRACE statements RETURN_KW expr CLOSE_BRACE {
-                    DEBUG_LOGL(@1, "Lambda block");
+                    DEBUG_LOGL(@$, "Lambda block");
                     $$ = make_ast_func_block_uptr($2, $4);
-                    node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
+                    node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
+                }
+            | OPEN_BRACE CLOSE_BRACE {
+                    DEBUG_LOGL(@$, "Void empty lambda block");
+                    $$ = make_ast_func_block_uptr();
+                    node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
+                }
+            | OPEN_BRACE statements CLOSE_BRACE {
+                    DEBUG_LOGL(@$, "Void noret lambda block");
+                    $$ = make_ast_func_block_uptr($2);
+                    node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
                 }
             | OPEN_BRACE RETURN_KW expr CLOSE_BRACE {
-                    DEBUG_LOGL(@1, "Single ret lambda block");
+                    DEBUG_LOGL(@$, "Single ret lambda block");
                     $$ = make_ast_func_block_uptr($3);
-                    node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
+                    node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
             }
 
 expr: IDENT {
                 $$ = make_ast_var_expr_uptr($1);
-                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
             }
     | INT_LIT {
                 $$ = make_ast_int_expr_uptr($1);
-                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
                 $$->cmp_node_type = "int";
             }
     | FLT_LIT {
                 $$ = make_ast_flt_expr_uptr($1);
-                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
                 $$->cmp_node_type = "float";
             }
     | STR_LIT {
                 $$ = make_ast_string_expr_uptr($1);
-                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
                 $$->cmp_node_type = "string";
             }
     | NEG expr %prec UNEG {
-        DEBUG_LOGL(@1, "Unary expression with target type "+$2->cmp_node_type);
+        DEBUG_LOGL(@$, "Unary expression with target type "+$2->cmp_node_type);
         $$ = make_ast_unary_expr_uptr(U_OPER_NEG, $2);
-        node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
+        node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
     }
     //TODO: mod
     | expr ADD expr {
                 $$ = make_ast_bin_expr_uptr(OPER_ADD, $1, $3);
-                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
-                DEBUG_LOGL(@1, "Binary expression");
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
+                DEBUG_LOGL(@$, "Binary expression");
             }
     | expr NEG expr {
                 $$ = make_ast_bin_expr_uptr(OPER_SUB, $1, $3);
-                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
-                DEBUG_LOGL(@1, "Binary expression");
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
+                DEBUG_LOGL(@$, "Binary expression");
             }
     | expr STAR expr {
                 $$ = make_ast_bin_expr_uptr(OPER_MULT, $1, $3);
-                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
-                DEBUG_LOGL(@1, "Binary expression");
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
+                DEBUG_LOGL(@$, "Binary expression");
             }
     | expr SLASH expr {
                 $$ = make_ast_bin_expr_uptr(OPER_DIV, $1, $3);
-                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
-                DEBUG_LOGL(@1, "Binary expression");
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
+                DEBUG_LOGL(@$, "Binary expression");
             }
     /*| var_dec ASSIGN expr {
-                DEBUG_LOGL(@1, "Assignment to new variable "+$1->name+" of type "+$1->cmp_node_type);
+                DEBUG_LOGL(@$, "Assignment to new variable "+$1->name+" of type "+$1->cmp_node_type);
                 $1->set_init_val($3);
                 $$ = std::move($1);
             }*/
     | IDENT ASSIGN expr {
-            DEBUG_LOGL(@1, "Assignment to mutable variable "+$1);
+            DEBUG_LOGL(@$, "Assignment to mutable variable "+$1);
             //auto symbol_iter = declared_symbols.find($1);
             //auto symbol_type_iter = symbol_type_map.find($1);
             //if(symbol_type_iter != symbol_type_map.end()){
                 ast_expr_uptr var_ref = make_ast_var_expr_uptr($1);
                 $$ = make_ast_bin_expr_uptr(OPER_ASSIGN, var_ref, $3);
-                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
-                DEBUG_LOGL(@1, "Binary expression");
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
+                DEBUG_LOGL(@$, "Binary expression");
             //}
             //else {
-            //    stdlog.err() << ANSI_CYAN << @1 << ANSI_RESET << "\t Assignment to undeclared variable " << $1 << std::endl;
+            //    stdlog.err() << ANSI_CYAN << @$ << ANSI_RESET << "\t Assignment to undeclared variable " << $1 << std::endl;
             //    throw PARSE_ERR;
             //}
         }
 	//function call
     | IDENT OPEN_PAREN lambda_args CLOSE_PAREN {
-        DEBUG_LOGL(@1, "Lambda "+$1+" call, with "+std::to_string($3.size())+" args");
+        DEBUG_LOGL(@$, "Lambda "+$1+" call, with "+std::to_string($3.size())+" args");
         $$ = make_ast_func_call_expr_uptr($1, $3);
-        node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
+        node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
     }
 	//grouping expressions - currently fucking everything up
     | OPEN_PAREN expr %prec EXPR_GROUP CLOSE_PAREN {
-			DEBUG_LOGL(@1, "Grouped expression");
+			DEBUG_LOGL(@$, "Grouped expression");
             $$ = std::move($2);
        }
 

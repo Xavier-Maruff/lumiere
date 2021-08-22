@@ -66,10 +66,10 @@ entry:
   %a1 = alloca double
   store double %a, double* %a1
   %a2 = load double, double* %a1
-  %0 = call double @ftest4(double %a2, double 0x3FF1F7CEE0000000, i64 200)
-  %1 = call double (double, ...) @ftest1(double %0)
+  %calltmp = call double @ftest4(double %a2, double 0x3FF1F7CEE0000000, i64 200)
+  %calltmp3 = call double (double, ...) @ftest1(double %calltmp)
   %glob = load double, double* @glob
-  %addtmp = fadd double %1, %glob
+  %addtmp = fadd double %calltmp3, %glob
   ret double %addtmp
 }
 
@@ -98,8 +98,20 @@ entry:
   ret double %addtmp3
 }
 
+define void @qwerrewq() {
+entry:
+  %glob = load double, double* @glob
+  %addtmp = fadd double %glob, 1.000000e+00
+  store double %addtmp, double* @glob
+  %glob1 = load double, double* @glob
+  %addtmp2 = fsub double %glob1, 1.000000e+00
+  store double %addtmp2, double* @glob
+  ret void
+}
+
 define double @ftest8() {
 entry:
+  call void @qwerrewq()
   %glob = load double, double* @glob
   ret double %glob
 }
@@ -126,8 +138,8 @@ entry:
 
 define i8* @stest3() {
 entry:
-  %0 = call i8* @stest2()
-  ret i8* %0
+  %calltmp = call i8* @stest2()
+  ret i8* %calltmp
 }
 
 define i8* @stest4() {

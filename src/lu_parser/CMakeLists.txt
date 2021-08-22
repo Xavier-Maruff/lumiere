@@ -47,7 +47,7 @@ add_library(lu_parser STATIC
     ast.cpp
     llvm_inst.cpp
     cmp_time_extensible.cpp
-    context_resolver.cpp
+    module_context.cpp
     ${BISON_bison_parser_OUTPUTS}
     ${FLEX_flex_lexer_OUTPUTS}
 )

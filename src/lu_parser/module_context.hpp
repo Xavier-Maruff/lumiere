@@ -1,5 +1,5 @@
-#ifndef LU_PARSER_MAIN_CONTEXT
-#define LU_PARSER_MAIN_CONTEXT
+#ifndef LU_PARSER_module_context
+#define LU_PARSER_module_context
 
 #include <llvm/IR/Value.h>
 #include <llvm/ADT/APFloat.h>
@@ -16,13 +16,17 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/GlobalValue.h>
 
-class main_context {
+#include <vector>
+#include <memory>
+
+class module_context {
     public:
 
-    main_context();
-    ~main_context();
+    module_context();
+    ~module_context();
 
     llvm::Value* gen_code();
+    
 };
 
 #endif

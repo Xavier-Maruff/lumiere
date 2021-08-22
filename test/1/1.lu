@@ -23,12 +23,20 @@ lambda float ftest6(float a) -> {
 
 //check expression grouping, global assignment
 lambda float ftest7(float q) -> {
-    glob = 10.0
+    glob = 9+1.0
     return (q+2)*3
 }
 
+lambda void qwerrewq() -> {
+    glob = glob+1
+    glob = glob-1
+}
+
 //check global mutability
-lambda float ftest8() -> glob
+lambda float ftest8() -> {
+    qwerrewq()
+    return glob
+}
 
 //check global no init val
 lambda float ftest9() -> glob/10

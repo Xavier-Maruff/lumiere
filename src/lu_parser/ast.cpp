@@ -65,7 +65,6 @@ std::string ast_expr::get_expr_type() {
     return "expr";
 }
 
-const expr_node_type ast_expr::base_expr_type = BASE_EXPR_NODE;
 
 
 //ast variable expression
@@ -234,7 +233,6 @@ std::string ast_var_expr::get_expr_type() {
     return "var";
 }
 
-const expr_node_type ast_var_expr::var_expr_type = VAR_EXPR_NODE;
 
 //ast float expression (but its a double)
 ast_flt_expr::ast_flt_expr() :
@@ -259,7 +257,6 @@ std::string ast_flt_expr::get_expr_type() {
     return "float";
 }
 
-const expr_node_type ast_flt_expr::flt_expr_type = FLT_EXPR_NODE;
 
 //ast integer expression
 ast_int_expr::ast_int_expr() :
@@ -284,7 +281,6 @@ std::string ast_int_expr::get_expr_type() {
     return "int";
 }
 
-const expr_node_type ast_int_expr::int_expr_type = INT_EXPR_NODE;
 
 //ast statement block
 ast_block::ast_block(std::vector<std::unique_ptr<ast_node>>& children_) :
@@ -339,7 +335,6 @@ std::string ast_string_expr::get_expr_type() {
     return "string";
 }
 
-const expr_node_type ast_string_expr::string_expr_type = STRING_EXPR_NODE;
 
 
 //ast binary expression
@@ -412,7 +407,6 @@ std::string ast_bin_expr::get_expr_type() {
     return "binary";
 }
 
-const expr_node_type ast_bin_expr::bin_expr_type = BIN_EXPR_NODE;
 
 ast_unary_expr::ast_unary_expr(unary_oper opcode_, std::unique_ptr<ast_expr>& target_):
 ast_expr(), opcode(opcode_), target(std::move(target_)){
@@ -488,8 +482,8 @@ llvm::Value* ast_func_call_expr::gen_code() {
     }
 
     //return llvm_irbuilder->CreateCall(f_callee, arg_values, "calltmp");
-    if(get_expr_type() == "void") return llvm_irbuilder->CreateCall(f_callee, arg_values);
-    else return llvm_irbuilder->CreateCall(f_callee, arg_values);
+    if(symbol_type_map[callee] == "void") return llvm_irbuilder->CreateCall(f_callee, arg_values);
+    else return llvm_irbuilder->CreateCall(f_callee, arg_values, "calltmp");
 }
 
 std::string ast_func_call_expr::get_expr_type() {
@@ -499,7 +493,6 @@ std::string ast_func_call_expr::get_expr_type() {
 }
 
 
-const expr_node_type ast_func_call_expr::func_call_expr_type = FUNC_CALL_EXPR_NODE;
 
 //function prototype
 ast_func_proto::ast_func_proto(std::string name_, std::vector<std::unique_ptr<ast_node>>& args_, std::string return_type_) :
@@ -610,6 +603,12 @@ llvm::Function* ast_func_def::gen_code() {
         //value_map_buffer.clear();
         return llvm_f;
     }
+    else if(func_body->cmp_node_type == "void"){
+        llvm_irbuilder->CreateRet(nullptr);
+        llvm::verifyFunction(*llvm_f);
+        load_tables_from_buffer();
+        return llvm_f;
+    }
 
     log_err()  << "Func body gen code returned nullptr" << std::endl;
     llvm_f->eraseFromParent();
@@ -626,9 +625,21 @@ ast_func_block::ast_func_block(std::vector<std::unique_ptr<ast_node>>& children_
     cmp_node_type = return_expr->cmp_node_type;
 }
 
+ast_func_block::ast_func_block(std::vector<std::unique_ptr<ast_node>>& children_) :
+    ast_block(children_) {
+    cmp_node_type = "void";
+    return_expr = nullptr;
+}
+
 ast_func_block::ast_func_block(std::unique_ptr<ast_expr>& return_expr_) :
     ast_block(), return_expr(std::move(return_expr_)) {
     cmp_node_type = return_expr->cmp_node_type;
+}
+
+ast_func_block::ast_func_block():
+ast_block(){
+    cmp_node_type = "void";
+    return_expr = nullptr;
 }
 
 ast_func_block::~ast_func_block() {
@@ -640,6 +651,8 @@ llvm::Value* ast_func_block::gen_code() {
         if(child != nullptr) child->gen_code();
         else log_warn()  << "Null child" << std::endl;
     }
+    if(return_expr == nullptr) return nullptr;
+
     llvm::Value* ret_val = return_expr->gen_code();
     cmp_node_type = return_expr->cmp_node_type;
     if(ret_val == nullptr) log_warn()  << "Null return from function " << std::endl;

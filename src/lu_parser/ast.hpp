@@ -1,6 +1,17 @@
 #ifndef LUMIERE_PARSER_AST
 #define LUMIERE_PARSER_AST
 
+/**
+ * @file ast.hpp
+ * @author Xavier Maruff (xavier.maruff@outlook.com)
+ * @brief Contains the AST node classes declarations
+ * @version 0.1
+ * @date 2021-08-22
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -13,34 +24,75 @@
 #include "ast_enums.h"
 #include "cmp_time_extensible.hpp"
 
-//base ast node ~ ABSTRACT
+/**
+ * @brief Abstract AST base node
+ * 
+ */
 class ast_node{
     public:
+    /**
+     * @brief Node name
+     * 
+     */
     std::string name;
+    /**
+     * @brief Node type
+     * 
+     */
     std::string cmp_node_type;
+    /**
+     * @brief Node ID
+     * 
+     */
     size_t node_id;
 
     ast_node();
     virtual ~ast_node() = 0;
 
-    //generate the IR
+    /**
+     * @brief Generate the LLVM IR
+     * 
+     * @return llvm::Value* Result of codegen
+     */
     virtual llvm::Value* gen_code();
 
-    //log an error
+    /**
+     * @brief Error logging formatted with source file location info
+     * 
+     * @return std::ostream& stderr
+     */
     inline std::ostream& log_err();
+
+    /**
+     * @brief Warning logging formatted with source file location info
+     * 
+     * @return std::ostream& stdout
+     */
     inline std::ostream& log_warn();
+
+    /**
+     * @brief Info logging formatted with source file location info
+     * 
+     * @return std::ostream& stdout
+     */
     inline std::ostream& log_info();
 };
 
-//base ast expression
+/**
+ * @brief Expression node
+ * 
+ */
 class ast_expr: public ast_node{
     public:
-    static const expr_node_type base_expr_type;
-
+    
     ast_expr();
     virtual ~ast_expr();
 
-    //get the expression type (see "expr_node_type" enum)
+    /**
+     * @brief Get the expression type
+     * 
+     * @return std::string 
+     */
     virtual std::string get_expr_type();
     virtual void set_init_val(std::unique_ptr<ast_expr>& start_expr);
 };
@@ -63,7 +115,9 @@ class ast_func_block: public ast_block{
     std::unique_ptr<ast_expr> return_expr;
 
     ast_func_block(std::vector<std::unique_ptr<ast_node>>& children_, std::unique_ptr<ast_expr>& return_expr_);
+    ast_func_block(std::vector<std::unique_ptr<ast_node>>& children_);
     ast_func_block(std::unique_ptr<ast_expr>& return_expr_);
+    ast_func_block();
     ~ast_func_block();
 
     llvm::Value* gen_code() override;
@@ -72,8 +126,7 @@ class ast_func_block: public ast_block{
 //baked variable expression - TODO: mutable
 class ast_var_expr: public ast_expr{
     public:
-    static const expr_node_type var_expr_type;
-    std::unique_ptr<ast_expr> init_val;
+        std::unique_ptr<ast_expr> init_val;
     bool is_global;
 
     ast_var_expr();
@@ -91,8 +144,7 @@ class ast_var_expr: public ast_expr{
 //float expression
 class ast_flt_expr: public ast_expr{
     public:
-    static const expr_node_type flt_expr_type;
-    //expression double value
+        //expression double value
     double value;
 
     ast_flt_expr();
@@ -106,8 +158,7 @@ class ast_flt_expr: public ast_expr{
 //integer expression
 class ast_int_expr: public ast_expr{
     public:
-    static const expr_node_type int_expr_type;
-    //expression int64 value
+        //expression int64 value
     int64_t value;
 
     ast_int_expr();
@@ -122,8 +173,7 @@ class ast_int_expr: public ast_expr{
 //represented as an i8*
 class ast_string_expr: public ast_expr{
     public:
-    static const expr_node_type string_expr_type;
-    //expression string value
+        //expression string value
     std::string value;
 
     ast_string_expr();
@@ -137,8 +187,7 @@ class ast_string_expr: public ast_expr{
 //binary expression
 class ast_bin_expr: public ast_expr{
     public:
-    static const expr_node_type bin_expr_type;
-    //operator - see "bin_oper" enum
+        //operator - see "bin_oper" enum
     bin_oper opcode;
     //pointers to adjacent nodes
     std::unique_ptr<ast_expr> lhs;
@@ -179,8 +228,7 @@ class ast_unary_expr: public ast_expr{
 
 class ast_func_call_expr: public ast_expr{
     public:
-    static const expr_node_type func_call_expr_type;
-    //the function name being called
+        //the function name being called
     std::string callee;
     //function args
     std::vector<std::unique_ptr<ast_expr>> args;
