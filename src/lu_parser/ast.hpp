@@ -18,6 +18,7 @@ class ast_node{
     public:
     std::string name;
     std::string cmp_node_type;
+    size_t node_id;
 
     ast_node();
     virtual ~ast_node() = 0;

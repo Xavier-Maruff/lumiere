@@ -20,8 +20,41 @@
 #include <functional>
 #include <vector>
 #include <set>
+#include <iostream>
 
 #include "ast_enums.h"
+
+//node id counter
+extern size_t current_node_id;
+
+//node source location information
+class error_loc_info {
+    public:
+
+    int filename_index;
+    int begin_line;
+    int begin_column;
+    int end_line;
+    int end_column;
+
+    //stores the source filenames
+    static std::vector<std::string> source_filenames;
+    //returns the index of a filename in the source_filenames vect, if not found adds filename to vect, returns new index
+    static int get_filename_index(const std::string filename);
+
+    error_loc_info(const std::string filename_, int begin_line_, int begin_column_, int end_line_, int end_column_);
+    error_loc_info();
+    ~error_loc_info();
+    
+    //returns the filename referenced to by the filename_index
+    std::string filename();
+
+    friend std::ostream& operator<<(std::ostream& os, error_loc_info& err_info);
+};
+
+//node location map
+extern std::map<size_t, error_loc_info> node_id_source_info_map;
+
 //reduce a pair of value pointers to one value pointer
 typedef std::function<llvm::Value*(llvm::Value*, llvm::Value*)> reduce_value_func;
 //reduce a single value pointer to a single value pointer

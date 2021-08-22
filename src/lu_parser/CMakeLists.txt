@@ -32,7 +32,7 @@ FIND_PACKAGE(BISON)
 
 BISON_TARGET(
     bison_parser bison.y ${CMAKE_CURRENT_BINARY_DIR}/bison.cpp
-    COMPILE_FLAGS --report=solved COMPILE_FLAGS --feature=fixit COMPILE_FLAGS -Wcounterexamples
+    COMPILE_FLAGS --report=solved COMPILE_FLAGS --feature=fixit #COMPILE_FLAGS -Wcounterexamples
     VERBOSE bison_log.txt
 )
 FLEX_TARGET(

@@ -7,18 +7,6 @@
 
 extern parser_driver drv;
 
-/*
-
-location step
-literals
-keywords
-identifier
-operands
-EOF
-unrecognised
-
-*/
-
 %}
 
 %option noyywrap nounput noinput batch debug

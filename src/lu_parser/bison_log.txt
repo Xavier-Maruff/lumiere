@@ -194,24 +194,6 @@ State 4
     "("       [reduce using rule 22 (expr)]
     $default  reduce using rule 22 (expr)
 
-    shift/reduce conflict on token "(":
-       22 expr: IDENT •
-       32 expr: IDENT • "(" lambda_args ")"
-      Example: IDENT • "(" expr ")"
-      Shift derivation
-        statements
-        ↳ statement
-          ↳ expr
-            ↳ IDENT • lambda_args ")"
-                      ↳ "(" expr
-      Reduce derivation
-        statements
-        ↳ statements    statement
-          ↳ statement   ↳ expr
-            ↳ expr        ↳ "(" expr ")"
-              ↳ IDENT •
-
-
 
 State 5
 
@@ -334,22 +316,6 @@ State 15
     "-"       [reduce using rule 6 (statement)]
     $default  reduce using rule 6 (statement)
 
-    shift/reduce conflict on token "-":
-        6 statement: expr •
-       28 expr: expr • "-" expr
-      Example: expr • "-" expr
-      Shift derivation
-        statements
-        ↳ statement
-          ↳ expr
-            ↳ expr • "-" expr
-      Reduce derivation
-        statements
-        ↳ statements  statement
-          ↳ statement ↳ expr
-            ↳ expr •    ↳ "-" expr
-
-
 
 State 16
 
@@ -403,26 +369,6 @@ State 19
 
     "("       [reduce using rule 22 (expr)]
     $default  reduce using rule 22 (expr)
-
-    shift/reduce conflict on token "(":
-       22 expr: IDENT •
-       32 expr: IDENT • "(" lambda_args ")"
-      Example: "-" IDENT • "(" expr ")"
-      Shift derivation
-        statements
-        ↳ statement
-          ↳ expr
-            ↳ "-" expr
-                  ↳ IDENT • lambda_args ")"
-                            ↳ "(" expr
-      Reduce derivation
-        statements
-        ↳ statements          statement
-          ↳ statement         ↳ expr
-            ↳ expr              ↳ "(" expr ")"
-              ↳ "-" expr
-                    ↳ IDENT •
-
 
 
 State 20
@@ -670,26 +616,6 @@ State 39
 
     "-"       [reduce using rule 18 (lambda_body)]
     $default  reduce using rule 18 (lambda_body)
-
-    shift/reduce conflict on token "-":
-       18 lambda_body: expr •
-       28 expr: expr • "-" expr
-      Example: lambda_dec "->" expr • "-" expr
-      Shift derivation
-        statements
-        ↳ statement
-          ↳ lambda_def
-            ↳ lambda_dec "->" lambda_body
-                              ↳ expr
-                                ↳ expr • "-" expr
-      Reduce derivation
-        statements
-        ↳ statements                        statement
-          ↳ statement                       ↳ expr
-            ↳ lambda_def                      ↳ "-" expr
-              ↳ lambda_dec "->" lambda_body
-                                ↳ expr •
-
 
 
 State 40

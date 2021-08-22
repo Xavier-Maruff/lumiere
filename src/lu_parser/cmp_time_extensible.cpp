@@ -4,6 +4,61 @@
 
 #include <llvm/Transforms/Utils/IntegerDivision.h>
 
+//node id counter
+size_t current_node_id = 0;
+
+//source filename vector
+std::vector<std::string> error_loc_info::source_filenames = {};
+
+//source info struct constructor
+error_loc_info::error_loc_info(const std::string filename_, int begin_line_, int begin_column_, int end_line_, int end_column_):
+filename_index(get_filename_index(filename_)),
+begin_line(begin_line_),
+begin_column(begin_column_),
+end_line(end_line_),
+end_column(end_column_){
+    //
+}
+
+//default constructor
+error_loc_info::error_loc_info():
+filename_index(0),
+begin_line(0),
+begin_column(0),
+end_line(0),
+end_column(0){
+    //
+}
+
+error_loc_info::~error_loc_info(){
+    //
+}
+
+//source info - retreive the filename
+std::string error_loc_info::filename(){
+    if(source_filenames.size() <= filename_index) return "unknown";
+    else return source_filenames[filename_index];
+}
+
+
+//get the index of the filename to store in the source info struct
+int error_loc_info::get_filename_index(const std::string filename){
+    auto filename_iter = std::find(source_filenames.begin(), source_filenames.end(), filename);
+    if(filename_iter == source_filenames.end()){
+        source_filenames.push_back(filename);
+        return source_filenames.size()-1;
+    }
+    else return filename_iter - source_filenames.begin();
+}
+
+std::ostream& operator<<(std::ostream& os, error_loc_info& err_info){
+    os << ANSI_CYAN << err_info.filename() << ", line " << err_info.begin_line << ":" << err_info.begin_column  << ANSI_RESET << " --- ";
+    return os;
+}
+
+//node id source map
+std::map<size_t, error_loc_info> node_id_source_info_map = {};
+
 //binary expression boilerplate
 llvm_reduce_value_func::llvm_reduce_value_func(reduce_value_func reduce_func_, std::string return_type_):
 reduce_func(reduce_func_), return_type(return_type_){}

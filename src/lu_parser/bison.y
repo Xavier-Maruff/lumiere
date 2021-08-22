@@ -177,10 +177,9 @@ statement: dec {
         | expr {
                     $$ = std::move($1);
                 }
-            | lambda_def {
-                    $$ = std::move($1);
-                    //$$->gen_code();
-                }
+        | lambda_def {
+                $$ = std::move($1);
+            }
 
 /*
 block: OPEN_BRACE statements CLOSE_BRACE {
@@ -208,11 +207,13 @@ dec: var_dec {
 var_dec: IDENT IDENT %prec DECL_TOK{
                         //DEBUG_LOGL(@1, "Assignment to new variable "+$2+" of type "+$1);
                         $$ = make_ast_var_expr_uptr($1, $2);
+                        node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
                         DEBUG_LOGL(@1, $1+" variable declaration "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
                 }
         | IDENT IDENT ASSIGN expr{
                 //DEBUG_LOGL(@1, "Assignment to new variable "+$2+" of type "+$1);
                 $$ = make_ast_var_expr_uptr($1, $2);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
                 $$->set_init_val($4);
                 DEBUG_LOGL(@1, $1+" variable initial assignment "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
             }
@@ -220,14 +221,17 @@ var_dec: IDENT IDENT %prec DECL_TOK{
 lambda_dec: LAMBDA_KW IDENT IDENT OPEN_PAREN decs CLOSE_PAREN {
                             DEBUG_LOGL(@1, "Function "+$3+" returning a "+$2);
                             $$ = make_ast_func_proto_uptr($3, $5, $2);
+                            node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
                         }
             | LAMBDA_KW IDENT IDENT OPEN_PAREN CLOSE_PAREN {
                             DEBUG_LOGL(@1, "Noarg function "+$3+" returning a "+$2);
                             $$ = make_ast_func_proto_uptr($3, $2);
+                            node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
                         }
             | LAMBDA_KW IDENT IDENT OPEN_PAREN decs ELLIPS CLOSE_PAREN {
                             DEBUG_LOGL(@1, "Variadic function "+$3+" returning a "+$2);
                             $$ = make_ast_func_proto_uptr($3, $5, $2);
+                            node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
                             $$->variadic = true;
                         }
 
@@ -250,46 +254,57 @@ lambda_body: expr {
 lambda_block: OPEN_BRACE statements RETURN_KW expr CLOSE_BRACE {
                     DEBUG_LOGL(@1, "Lambda block");
                     $$ = make_ast_func_block_uptr($2, $4);
+                    node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
                 }
             | OPEN_BRACE RETURN_KW expr CLOSE_BRACE {
                     DEBUG_LOGL(@1, "Single ret lambda block");
                     $$ = make_ast_func_block_uptr($3);
+                    node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
             }
 
 expr: IDENT {
                 $$ = make_ast_var_expr_uptr($1);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
             }
     | INT_LIT {
                 $$ = make_ast_int_expr_uptr($1);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
                 $$->cmp_node_type = "int";
             }
     | FLT_LIT {
                 $$ = make_ast_flt_expr_uptr($1);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
                 $$->cmp_node_type = "float";
             }
     | STR_LIT {
                 $$ = make_ast_string_expr_uptr($1);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
                 $$->cmp_node_type = "string";
             }
     | NEG expr %prec UNEG {
         DEBUG_LOGL(@1, "Unary expression with target type "+$2->cmp_node_type);
         $$ = make_ast_unary_expr_uptr(U_OPER_NEG, $2);
+        node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
     }
     //TODO: mod
     | expr ADD expr {
                 $$ = make_ast_bin_expr_uptr(OPER_ADD, $1, $3);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
                 DEBUG_LOGL(@1, "Binary expression");
             }
     | expr NEG expr {
                 $$ = make_ast_bin_expr_uptr(OPER_SUB, $1, $3);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
                 DEBUG_LOGL(@1, "Binary expression");
             }
     | expr STAR expr {
                 $$ = make_ast_bin_expr_uptr(OPER_MULT, $1, $3);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
                 DEBUG_LOGL(@1, "Binary expression");
             }
     | expr SLASH expr {
                 $$ = make_ast_bin_expr_uptr(OPER_DIV, $1, $3);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
                 DEBUG_LOGL(@1, "Binary expression");
             }
     /*| var_dec ASSIGN expr {
@@ -304,6 +319,7 @@ expr: IDENT {
             //if(symbol_type_iter != symbol_type_map.end()){
                 ast_expr_uptr var_ref = make_ast_var_expr_uptr($1);
                 $$ = make_ast_bin_expr_uptr(OPER_ASSIGN, var_ref, $3);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
                 DEBUG_LOGL(@1, "Binary expression");
             //}
             //else {
@@ -315,6 +331,7 @@ expr: IDENT {
     | IDENT OPEN_PAREN lambda_args CLOSE_PAREN {
         DEBUG_LOGL(@1, "Lambda "+$1+" call, with "+std::to_string($3.size())+" args");
         $$ = make_ast_func_call_expr_uptr($1, $3);
+        node_id_source_info_map[$$->node_id] = error_loc_info(*@1.begin.filename, @1.begin.line, @1.begin.column, @1.end.line, @1.end.column);
     }
 	//grouping expressions - currently fucking everything up
     | OPEN_PAREN expr %prec EXPR_GROUP CLOSE_PAREN {
