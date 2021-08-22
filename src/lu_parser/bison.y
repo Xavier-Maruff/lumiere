@@ -353,10 +353,9 @@ lambda_args: expr {
 
 %%
 
-void yy::parser::error (const location_type& l, const std::string& m){
-    std::stringstream msg;
-    msg << ANSI_CYAN << l << ANSI_RESET << "\t" << m;
-    stdlog.err() << msg.rdbuf() << std::endl;
+void yy::parser::error (const location_type& l, const std::string& m){ 
+    stdlog.err() << ANSI_CYAN << *l.begin.filename << ", line " << l.begin.line << ":" << l.begin.column
+    << " - " << l.end.line << ":" << l.end.column  << ANSI_RESET << " -> " << m << std::endl;
     throw PARSE_ERR;
 }
 

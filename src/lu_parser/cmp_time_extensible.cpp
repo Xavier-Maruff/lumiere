@@ -52,7 +52,8 @@ int error_loc_info::get_filename_index(const std::string filename){
 }
 
 std::ostream& operator<<(std::ostream& os, error_loc_info& err_info){
-    os << ANSI_CYAN << err_info.filename() << ", line " << err_info.begin_line << ":" << err_info.begin_column  << ANSI_RESET << " --- ";
+    os << ANSI_CYAN << err_info.filename() << ", line " << err_info.begin_line << ":" << err_info.begin_column
+    << " - " << err_info.end_line << ":" << err_info.end_column  << ANSI_RESET << " -> ";
     return os;
 }
 
