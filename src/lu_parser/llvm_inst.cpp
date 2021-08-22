@@ -25,8 +25,7 @@ llvm::AllocaInst* insert_alloca_at_entry(llvm::Function* f_to_insert, const std:
     type_transform_func* var_type_transform = get_llvm_type(type_name);
 
     if (var_type_transform == nullptr) {
-        stdlog.err() << "Variable \"" << var_name << "\" is of an unrecognised type (\"" << type_name << "\")" << std::endl;
-        //THROW?
+        //stdlog.err() << "Variable \"" << var_name << "\" is of an unrecognised type (\"" << type_name << "\")" << std::endl;
         return nullptr;
     }
     llvm::IRBuilder<> temp_block(&f_to_insert->getEntryBlock(), f_to_insert->getEntryBlock().begin());
@@ -38,7 +37,7 @@ llvm::AllocaInst* insert_alloca_at_entry(llvm::BasicBlock* b_to_insert, const st
     type_transform_func* var_type_transform = get_llvm_type(type_name);
 
     if (var_type_transform == nullptr) {
-        stdlog.err() << "Variable \"" << var_name << "\" is of an unrecognised type (\"" << type_name << "\")" << std::endl;
+        //stdlog.err() << "Variable \"" << var_name << "\" is of an unrecognised type (\"" << type_name << "\")" << std::endl;
         return nullptr;
     }
     llvm::IRBuilder<> temp_block(b_to_insert, b_to_insert->begin());

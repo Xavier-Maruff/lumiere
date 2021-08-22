@@ -65,12 +65,11 @@ define double @ftest5(double %a) {
 entry:
   %a1 = alloca double
   store double %a, double* %a1
-  %0 = call double (double, ...) @ftest1()
   %a2 = load double, double* %a1
-  %1 = call double @ftest4(double %a2, double 0x3FF1F7CEE0000000, i64 200)
-  %2 = call double (double, ...) @ftest1(double %1)
+  %0 = call double @ftest4(double %a2, double 0x3FF1F7CEE0000000, i64 200)
+  %1 = call double (double, ...) @ftest1(double %0)
   %glob = load double, double* @glob
-  %addtmp = fadd double %2, %glob
+  %addtmp = fadd double %1, %glob
   ret double %addtmp
 }
 

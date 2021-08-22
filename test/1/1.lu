@@ -9,8 +9,6 @@ lambda float ftest4(float a, float y, int p) -> {
 }
 //check function call
 lambda float ftest5(float a) -> {
-    //syntax error to test the error logging
-    ftest1()
     return ftest1(ftest4(a, 1.123, 200))+glob
 }
 

@@ -26,6 +26,10 @@ class ast_node{
     //generate the IR
     virtual llvm::Value* gen_code();
 
+    //log an error
+    inline std::ostream& log_err();
+    inline std::ostream& log_warn();
+    inline std::ostream& log_info();
 };
 
 //base ast expression

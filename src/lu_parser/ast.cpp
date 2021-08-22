@@ -30,6 +30,18 @@ ast_node::~ast_node() {
     //
 }
 
+std::ostream& ast_node::log_err(){
+    return stdlog.err() << node_id_source_info_map[node_id];
+}
+
+std::ostream& ast_node::log_warn(){
+    return stdlog.warn() << node_id_source_info_map[node_id];
+}
+
+std::ostream& ast_node::log_info(){
+    return stdlog() << node_id_source_info_map[node_id];
+}
+
 llvm::Value* ast_node::gen_code() {
     return nullptr;
 }
@@ -90,7 +102,7 @@ ast_var_expr::~ast_var_expr() {
 
 void ast_var_expr::set_init_val(std::unique_ptr<ast_expr>& start_expr){
     if(start_expr == nullptr){
-        stdlog.warn() << node_id_source_info_map[node_id]  << "Nullptr initial value for var " << name << std::endl;
+        log_warn()  << "Nullptr initial value for var " << name << std::endl;
     }
     init_val = std::move(start_expr);
 }
@@ -100,19 +112,19 @@ llvm::Value* ast_var_expr::gen_global_def(){
     llvm::Value* ret_val = nullptr;
     llvm::Value* init_val_gen = init_val->gen_code();
     if(init_val_gen == nullptr){
-        stdlog.err() << node_id_source_info_map[node_id]  << "Initial value for var " << name << " return nullptr at codegen" << std::endl;
+        log_err()  << "Initial value for var " << name << " return nullptr at codegen" << std::endl;
         throw PARSE_ERR;
     }
     //cast to a constant
     llvm::Constant* constant_expr = llvm::dyn_cast<llvm::Constant>(init_val_gen);
     if(constant_expr == nullptr) {
-        stdlog.err() << node_id_source_info_map[node_id]  << "Nullptr returned casting init val to llvm::Constant for global " << name << std::endl;
+        log_err()  << "Nullptr returned casting init val to llvm::Constant for global " << name << std::endl;
         throw PARSE_ERR;
     }
     //create the global variable
     llvm::Value* global_var = create_global_var(name, cmp_node_type, constant_expr);
     if(global_var == nullptr){
-        stdlog.err() << node_id_source_info_map[node_id]  << "Nullptr returned creating global var " << name << std::endl;
+        log_err()  << "Nullptr returned creating global var " << name << std::endl;
         throw PARSE_ERR;
     }
     //record the global var in the symbol table
@@ -130,6 +142,11 @@ llvm::Value* ast_var_expr::gen_global_def(){
 
 llvm::Value* ast_var_expr::gen_code(){
 
+    if(cmp_node_type == std::string()){
+        log_err() << "Use of undeclared variable " << name << std::endl;
+        throw PARSE_ERR;
+    }
+
     llvm::Value* ret_val = nullptr;
     llvm::BasicBlock* parent_b = llvm_irbuilder->GetInsertBlock();
 
@@ -142,7 +159,7 @@ llvm::Value* ast_var_expr::gen_code(){
             is_global = true;
             global_symbols.insert(name);
             if(init_val == nullptr){
-                stdlog.warn() << node_id_source_info_map[node_id]  << "No initial value provided for global var " << name << ", init as default" << std::endl;
+                log_warn()  << "No initial value provided for global var " << name << ", init as default" << std::endl;
                 return nullptr;
                 //TODO: default type primitives
             }
@@ -159,7 +176,7 @@ llvm::Value* ast_var_expr::gen_code(){
             llvm::AllocaInst* var_alloca = insert_alloca(parent_b, name, cmp_node_type);
 
             if(var_alloca == nullptr) {
-                stdlog.err() << node_id_source_info_map[node_id]  << "Variable " << name << " allocation failed" << std::endl;
+                log_err()  << "Variable " << name << " allocation failed" << std::endl;
                 throw PARSE_ERR;
             }
 
@@ -178,7 +195,7 @@ llvm::Value* ast_var_expr::gen_code(){
     else ret_val = value_map[name];
 
     if(ret_val == nullptr){
-        stdlog.err() << node_id_source_info_map[node_id]  << "Nullptr alloca value found for var " << name << std::endl;
+        log_err()  << "Nullptr alloca value found for var " << name << std::endl;
         throw PARSE_ERR;
     }
 
@@ -188,24 +205,24 @@ llvm::Value* ast_var_expr::gen_code(){
         if(init_val != nullptr){
             llvm::Value* init_val_gen = init_val->gen_code();
             if(init_val_gen == nullptr) {
-                stdlog.err() << node_id_source_info_map[node_id]  << "Nullptr initial value after codegen for var " << name << std::endl;
+                log_err()  << "Nullptr initial value after codegen for var " << name << std::endl;
                 throw PARSE_ERR;
             }
             llvm_irbuilder->CreateStore(init_val_gen, ret_val);
             defined_symbols.insert(name);
         }
-        //else stdlog.warn() << node_id_source_info_map[node_id]  << "No init val provided for var " << name << std::endl;
+        //else log_warn()  << "No init val provided for var " << name << std::endl;
     }
 
     //get the variable type information
     type_transform_func* type_ptr = get_llvm_type(cmp_node_type);
     if(type_ptr == nullptr) {
-        stdlog.err() << node_id_source_info_map[node_id]  << "Variable " << name << " type (" << cmp_node_type << ") not recognised" << std::endl;
+        log_err()  << "Variable " << name << " type (" << cmp_node_type << ") not recognised" << std::endl;
         throw PARSE_ERR;
     }
     llvm::Type* var_type = type_ptr->operator()(*llvm_context);
     if(var_type == nullptr){
-        stdlog.err() << node_id_source_info_map[node_id]  << "Error retrieving variable " << name << " type (" << cmp_node_type << ")" << std::endl;
+        log_err()  << "Error retrieving variable " << name << " type (" << cmp_node_type << ")" << std::endl;
         throw PARSE_ERR;
     }
 
@@ -311,7 +328,7 @@ ast_string_expr::~ast_string_expr() {
 llvm::Value* ast_string_expr::gen_code() {
     llvm::BasicBlock* parent_b = llvm_irbuilder->GetInsertBlock();
     if(parent_b == nullptr){
-        stdlog.warn() << node_id_source_info_map[node_id]  << "Creating global strings not yet implemented" << std::endl;
+        log_warn()  << "Creating global strings not yet implemented" << std::endl;
         //return llvm_irbuilder->
         return nullptr;
     }
@@ -351,12 +368,12 @@ llvm::Value* ast_bin_expr::gen_code() {
         // Assignment requires the LHS to be an identifier.
         ast_var_expr *lhs_raw = dynamic_cast<ast_var_expr*>(lhs.get());
         if(lhs_raw == nullptr){
-            stdlog.err() << node_id_source_info_map[node_id]  << "Only variables can be assigned to" << std::endl;
+            log_err()  << "Only variables can be assigned to" << std::endl;
             throw PARSE_ERR;
         }
         lhs_val = value_map[lhs_raw->name];
         if(declared_symbols.find(lhs_raw->name) == declared_symbols.end() || lhs_val == nullptr){
-            stdlog.err() << node_id_source_info_map[node_id]  << "Assignment to undeclared variable " << lhs_raw->name << std::endl;
+            log_err()  << "Assignment to undeclared variable " << lhs_raw->name << std::endl;
             throw PARSE_ERR;
         }
     }
@@ -365,7 +382,7 @@ llvm::Value* ast_bin_expr::gen_code() {
     rhs_val = rhs->gen_code();
 
     if (lhs_val == nullptr || rhs_val == nullptr) {
-        stdlog.err() << node_id_source_info_map[node_id]  << "Nullptr node in binexpr" << std::endl;
+        log_err()  << "Nullptr node in binexpr" << std::endl;
         throw PARSE_ERR;
     }
 
@@ -374,7 +391,7 @@ llvm::Value* ast_bin_expr::gen_code() {
     //check if the operation is valid
     if (code_gen_func_iter == bin_oper_reduce_func_map.end()) {
         //No valid operation for the two adjacent nodes
-        stdlog.err() << node_id_source_info_map[node_id]  << "No " << get_string_bin_oper(opcode) << " operation for nodes "
+        log_err()  << "No " << get_string_bin_oper(opcode) << " operation for nodes "
             << lhs->cmp_node_type << " (" << lhs->name << "), "
             << " and " << rhs->cmp_node_type << " (" << rhs->name << ")" << std::endl;
         //throw err
@@ -384,7 +401,7 @@ llvm::Value* ast_bin_expr::gen_code() {
     cmp_node_type = code_gen_func_iter->second.return_type;
     
     if(code_gen_func == nullptr){
-        stdlog.err() << node_id_source_info_map[node_id]  << "Code gen func for bin expr retreived as nullptr" << std::endl;
+        log_err()  << "Code gen func for bin expr retreived as nullptr" << std::endl;
         throw PARSE_ERR; 
     }
     //generate the value pointer
@@ -420,7 +437,7 @@ llvm::Value* ast_unary_expr::gen_code() {
     //check if the operation is valid
     if (code_gen_func_iter == unary_oper_reduce_func_map.end()) {
         //No valid operation for the two adjacent nodes
-        stdlog.err() << node_id_source_info_map[node_id]  << "No " << get_string_unary_oper(opcode) << " operation for node "
+        log_err()  << "No " << get_string_unary_oper(opcode) << " operation for node "
             << target->cmp_node_type << std::endl;
         //throw err
         throw PARSE_ERR;
@@ -449,12 +466,12 @@ ast_func_call_expr::~ast_func_call_expr() {
 llvm::Value* ast_func_call_expr::gen_code() {
     llvm::Function* f_callee = llvm_module->getFunction(callee);
     if (f_callee == nullptr) {
-        stdlog.err() << node_id_source_info_map[node_id]  << "Function \"" << callee << "\" not recognised" << std::endl;
+        log_err()  << "Function \"" << callee << "\" not recognised" << std::endl;
         throw PARSE_ERR;
     }
     //todo: also check arg type
     if (f_callee->arg_size() > args.size()) {
-        stdlog.err() << node_id_source_info_map[node_id]  << "Invalid arguments supplied to function \"" << callee << std::endl;
+        log_err()  << "Invalid arguments supplied to function \"" << callee << std::endl;
         throw PARSE_ERR;
     }
     std::vector<llvm::Value*> arg_values;
@@ -463,7 +480,7 @@ llvm::Value* ast_func_call_expr::gen_code() {
         llvm::Value* arg_code_gen = args[index]->gen_code();
         if(arg_code_gen == nullptr) return nullptr;
         if (index < func_args_size && args[index]->cmp_node_type != func_args_type_map[callee][index]) {
-            stdlog.err() << node_id_source_info_map[node_id]  << callee << " argument " << index << " is of type " << args[index]->cmp_node_type
+            log_err()  << callee << " argument " << index << " is of type " << args[index]->cmp_node_type
                 << ", was expecting " << func_args_type_map[callee][index] << std::endl;
                 throw PARSE_ERR;
         }
@@ -554,7 +571,7 @@ llvm::Function* ast_func_def::gen_code() {
     llvm::Function* llvm_f = llvm_module->getFunction(func_proto->name);
     if (llvm_f == nullptr) llvm_f = func_proto->gen_code();
     if (llvm_f == nullptr) {
-        stdlog.err() << node_id_source_info_map[node_id]  << "Function prototype code gen returned nullptr" << std::endl;
+        log_err()  << "Function prototype code gen returned nullptr" << std::endl;
         return nullptr;
     }
 
@@ -581,7 +598,7 @@ llvm::Function* ast_func_def::gen_code() {
 
     //maybe should throw error
     if (func_body->cmp_node_type != func_proto->return_type) {
-        stdlog.warn() << node_id_source_info_map[node_id]  << "Function " << func_proto->name << " is declared to return " << func_proto->return_type
+        log_warn()  << "Function " << func_proto->name << " is declared to return " << func_proto->return_type
             << ",  but returns " << func_body->cmp_node_type << std::endl;
     }
 
@@ -594,7 +611,7 @@ llvm::Function* ast_func_def::gen_code() {
         return llvm_f;
     }
 
-    stdlog.err() << node_id_source_info_map[node_id]  << "Func body gen code returned nullptr" << std::endl;
+    log_err()  << "Func body gen code returned nullptr" << std::endl;
     llvm_f->eraseFromParent();
     load_tables_from_buffer();
     //value_map = value_map_buffer;
@@ -621,10 +638,10 @@ ast_func_block::~ast_func_block() {
 llvm::Value* ast_func_block::gen_code() {
     for (std::unique_ptr<ast_node>& child : children) {
         if(child != nullptr) child->gen_code();
-        else stdlog.warn() << node_id_source_info_map[node_id]  << "Null child" << std::endl;
+        else log_warn()  << "Null child" << std::endl;
     }
     llvm::Value* ret_val = return_expr->gen_code();
     cmp_node_type = return_expr->cmp_node_type;
-    if(ret_val == nullptr) stdlog.warn() << node_id_source_info_map[node_id]  << "Null return from function " << std::endl;
+    if(ret_val == nullptr) log_warn()  << "Null return from function " << std::endl;
     return ret_val;
 }
