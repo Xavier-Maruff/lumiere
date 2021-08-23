@@ -1,6 +1,4 @@
-[submodule "doxygen-awesome-css"]
-	path = doxygen-awesome-css
-	url = https://github.com/jothepro/doxygen-awesome-css.git
-[submodule "docs/doxygen-awesome-css"]
-	path = docs/doxygen-awesome-css
-	url = https://github.com/jothepro/doxygen-awesome-css.git
+
+[submodule "docs"]
+	path = docs
+	url = https://github.com/Xavier-Maruff/ludocs.git
