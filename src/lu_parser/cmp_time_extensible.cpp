@@ -1,3 +1,14 @@
+/**
+ * @file cmp_time_extensible.cpp
+ * @author Xavier Maruff (xavier.maruff@outlook.com)
+ * @brief Contains the compile time extensible definitions
+ * @version 0.1
+ * @date 2021-08-23
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
+
 #include "cmp_time_extensible.hpp"
 #include "llvm_inst.hpp"
 #include "log.hpp"
@@ -61,16 +72,16 @@ std::ostream& operator<<(std::ostream& os, error_loc_info& err_info){
 std::map<size_t, error_loc_info> node_id_source_info_map = {};
 
 //binary expression boilerplate
-llvm_reduce_value_func::llvm_reduce_value_func(reduce_value_func reduce_func_, std::string return_type_):
+reduce_binary_value::reduce_binary_value(reduce_binary_value_func reduce_func_, std::string return_type_):
 reduce_func(reduce_func_), return_type(return_type_){}
 
-llvm::Value* llvm_reduce_value_func::operator()(llvm::Value* lhs, llvm::Value* rhs){return reduce_func(lhs, rhs);}
+llvm::Value* reduce_binary_value::operator()(llvm::Value* lhs, llvm::Value* rhs){return reduce_func(lhs, rhs);}
 
 //unary expression boilerplate
-llvm_reduce_unary_value_func::llvm_reduce_unary_value_func(reduce_unary_value_func reduce_func_, std::string return_type_):
+reduce_unary_value::reduce_unary_value(reduce_unary_value_func reduce_func_, std::string return_type_):
 reduce_func(reduce_func_), return_type(return_type_){}
 
-llvm::Value* llvm_reduce_unary_value_func::operator()(llvm::Value* target){return reduce_func(target);}
+llvm::Value* reduce_unary_value::operator()(llvm::Value* target){return reduce_func(target);}
 
 //converts lumiere typenames to llvm types
 type_map_type type_map = {
@@ -83,7 +94,7 @@ type_map_type type_map = {
 
 
 //returns a function that generates the IR for a binary expression - this should allow for easy operator overloading
-bin_oper_reduce_func_map_type bin_oper_reduce_func_map = {
+bin_oper_reduce_map_type bin_oper_reduce_map = {
     //LHS + RHS
     {{"float", OPER_ADD, "int"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
         return llvm_irbuilder->CreateFAdd(lhs, llvm_irbuilder->CreateSIToFP(rhs, type_map["float"](*llvm_context)), "addtmp");
@@ -158,7 +169,7 @@ bin_oper_reduce_func_map_type bin_oper_reduce_func_map = {
 };
 
 //returns a function to generate IR for unary expression
-unary_oper_reduce_func_map_type unary_oper_reduce_func_map = {
+unary_oper_reduce_map_type unary_oper_reduce_map = {
     {{U_OPER_NEG, "float"}, {[](llvm::Value* target) -> llvm::Value* {
         return llvm_irbuilder->CreateFNeg(target);
     }, "float"}},

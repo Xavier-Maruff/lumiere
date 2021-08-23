@@ -1,3 +1,15 @@
+/**
+ * @file cli.cpp
+ * @author Xavier Maruff (xavier.maruff@outlook.com)
+ * @brief CLI implementation
+ * @version 0.1
+ * @date 2021-08-23
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
+
+
 #include <iostream>
 #include <boost/program_options.hpp>
 

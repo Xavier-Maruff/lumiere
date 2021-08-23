@@ -93,14 +93,22 @@ class ast_expr: public ast_node{
      * 
      * @return std::string 
      */
-    virtual std::string get_expr_type();
+
+
+    /**
+     * @brief Set the expression init val - mostly used for global variables
+     * 
+     * @param start_expr uptr to the initial value expression
+     */
     virtual void set_init_val(std::unique_ptr<ast_expr>& start_expr);
 };
 
-//code block - not yet implement in parser
+/**
+ * @brief Code block node
+ * 
+ */
 class ast_block: public ast_node{
     public:
-    //this should probably be a vector of node pointers, not expr pointers
     std::vector<std::unique_ptr<ast_node>> children;
 
     ast_block(std::vector<std::unique_ptr<ast_node>>& children_);
@@ -110,142 +118,287 @@ class ast_block: public ast_node{
     virtual llvm::Value* gen_code() override;
 };
 
+/**
+ * @brief Function code block
+ * 
+ */
 class ast_func_block: public ast_block{
     public:
     std::unique_ptr<ast_expr> return_expr;
 
+    /**
+     * @brief Construct a new ast func block object
+     * 
+     * @param children_ Discrete expressions in the block
+     * @param return_expr_ Return expression
+     */
     ast_func_block(std::vector<std::unique_ptr<ast_node>>& children_, std::unique_ptr<ast_expr>& return_expr_);
+
+    /**
+     * @brief No return expression - used for void functions
+     */
     ast_func_block(std::vector<std::unique_ptr<ast_node>>& children_);
+
+    /**
+     * @brief Just a return expression - used for single expression functions
+     */
     ast_func_block(std::unique_ptr<ast_expr>& return_expr_);
+
+    /**
+     * @brief Empty void function block
+     */
     ast_func_block();
     ~ast_func_block();
 
     llvm::Value* gen_code() override;
 };
 
-//baked variable expression - TODO: mutable
+/**
+ * @brief Variable expression node
+ * 
+ */
 class ast_var_expr: public ast_expr{
     public:
-        std::unique_ptr<ast_expr> init_val;
+    /**
+     * @brief Initival value - does not need to be set for non-global variables
+     * 
+     */
+    std::unique_ptr<ast_expr> init_val;
     bool is_global;
 
     ast_var_expr();
+    /**
+     * @brief Constructor - used for variables being declared
+     * 
+     * @param cmp_node_type_ Variable type
+     * @param name_ Variable name
+     * @param is_global_ Not used currently
+     */
     ast_var_expr(std::string cmp_node_type_, std::string name_, bool is_global_ = false);
+
+    /**
+     * @brief Constructor used for variables already declared (type not apparent from parse)
+     * 
+     * @param name_ Variable name
+     * @param is_global_ Not used currently
+     */
     ast_var_expr(std::string name_, bool is_global_ = false);
     virtual ~ast_var_expr();
 
     llvm::Value* gen_code() override;
-    std::string get_expr_type() override;
-    //TODO: will be deprecated after mutable vars are added
+
+    /**
+     * @brief Set the initial value of the variable - mostly used for globals
+     * 
+     * @param start_expr Uptr to the initial value expression
+     */
     void set_init_val(std::unique_ptr<ast_expr>& start_expr) override;
     llvm::Value* gen_global_def();
 };
 
-//float expression
+/**
+ * @brief Float literal node - actually a double
+ * 
+ */
 class ast_flt_expr: public ast_expr{
     public:
-        //expression double value
+    /**
+     * @brief The double value of the expression
+     * 
+     */
     double value;
 
     ast_flt_expr();
+    /**
+     * @brief Constructor with value
+     * 
+     * @param value_ the double value
+     */
     ast_flt_expr(double value_);
     virtual ~ast_flt_expr();
 
     llvm::Value* gen_code() override;
-    std::string get_expr_type() override;
+
 };
 
-//integer expression
+/**
+ * @brief Integer (int_64t) expression
+ * 
+ */
 class ast_int_expr: public ast_expr{
     public:
-        //expression int64 value
+    /**
+     * @brief Expression integer value
+     * 
+     */
     int64_t value;
 
     ast_int_expr();
+    /**
+     * @brief Constructor with new int value
+     * 
+     * @param value_ the integer value of the expression
+     */
     ast_int_expr(int64_t value_);
     virtual ~ast_int_expr();
     
     llvm::Value* gen_code() override;
-    std::string get_expr_type() override;
+
 };
 
-//string expression
-//represented as an i8*
+/**
+ * @brief String expression node
+ * 
+ */
 class ast_string_expr: public ast_expr{
     public:
-        //expression string value
+    /**
+     * @brief Value of the node as std::string
+     * 
+     */
     std::string value;
 
     ast_string_expr();
+    /**
+     * @brief Constructor with std::string expression value
+     * 
+     * @param value_ 
+     */
     ast_string_expr(std::string value_);
     virtual ~ast_string_expr();
     
     llvm::Value* gen_code() override;
-    std::string get_expr_type() override;
+
 };
 
-//binary expression
+/**
+ * @brief Binary expression node
+ * 
+ */
 class ast_bin_expr: public ast_expr{
     public:
-        //operator - see "bin_oper" enum
+    /**
+     * @brief Binary operation opcode
+     * 
+     */
     bin_oper opcode;
-    //pointers to adjacent nodes
+    /**
+     * @brief Uptr to left hand side node
+     * 
+     */
     std::unique_ptr<ast_expr> lhs;
+    /**
+     * @brief Uptr to right hand side node
+     * 
+     */
     std::unique_ptr<ast_expr> rhs;
-    //binary reduction function (derived from types and opcode using binary reduction function map)
-    llvm_reduce_value_func* code_gen_func;
+    /**
+     * @brief Pointer to function that reduces the binary expression to one llvm::Value*
+     * 
+     */
+    reduce_binary_value* code_gen_func;
 
     ast_bin_expr();
+    /**
+     * @brief Constructor
+     * 
+     * @param opcode_ Operation code
+     * @param lhs_ Uptr to LHS expression
+     * @param rhs_ Uptr to RHS expression
+     */
     ast_bin_expr(bin_oper opcode_, std::unique_ptr<ast_expr>& lhs_, std::unique_ptr<ast_expr>& rhs_);
     virtual ~ast_bin_expr();
 
     llvm::Value* gen_code() override;
-    std::string get_expr_type() override;
+
 };
 
-//class ast_assign_expr: public ast_expr{
-    //
-//};
-
-//unary expression
+/**
+ * @brief Unary expression node
+ * 
+ */
 class ast_unary_expr: public ast_expr{
     public:
-    //unary operator
+    /**
+     * @brief Unary operation code
+     * 
+     */
     unary_oper opcode;
-    //pointer to adjacent node
+    /**
+     * @brief Node that is operated upon
+     * 
+     */
     std::unique_ptr<ast_expr> target;
-    llvm_reduce_unary_value_func* code_gen_func;
+    /**
+     * @brief Pointer to function that transforms the target
+     * 
+     */
+    reduce_unary_value* code_gen_func;
 
     ast_unary_expr();
+    /**
+     * @brief Constructor
+     * 
+     * @param opcode_ The operation code
+     * @param target_ Uptr to the target node
+     */
     ast_unary_expr(unary_oper opcode_, std::unique_ptr<ast_expr>& target_);
     virtual ~ast_unary_expr();
 
     llvm::Value* gen_code() override;
-    std::string get_expr_type() override;
+
 };
 
-//TODO: CODEGEN
-
+/**
+ * @brief Function call node
+ * 
+ */
 class ast_func_call_expr: public ast_expr{
     public:
-        //the function name being called
+    /**
+     * @brief Name of the function being called
+     * 
+     */
     std::string callee;
-    //function args
+    /**
+     * @brief Vector of uptrs to the function arg expressions
+     * 
+     */
     std::vector<std::unique_ptr<ast_expr>> args;
 
+    /**
+     * @brief Constructor
+     * 
+     * @param callee_ Name of the function being called
+     * @param args_ Vector of uptrs to the function args nodes
+     */
     ast_func_call_expr(std::string callee_, std::vector<std::unique_ptr<ast_expr>>& args_);
     virtual ~ast_func_call_expr();
 
     llvm::Value* gen_code() override;
-    std::string get_expr_type() override;
+
 };
 
+/**
+ * @brief Function prototype node
+ * 
+ */
 class ast_func_proto: public ast_node{
     public:
-    //args at dec
+    /**
+     * @brief Vector of uptrs to the function args
+     * 
+     */
     std::vector<std::unique_ptr<ast_node>> args;
+    /**
+     * @brief Whether the function has variadic arguments or not
+     * 
+     */
     bool variadic;
-    //function return type
+    /**
+     * @brief Function return type
+     * 
+     */
     std::string return_type;
 
     ast_func_proto(std::string name_, std::vector<std::unique_ptr<ast_node>>& args_, std::string return_type_);
@@ -255,16 +408,38 @@ class ast_func_proto: public ast_node{
     llvm::Function* gen_code();
 };
 
+/**
+ * @brief Function definition node
+ * 
+ */
 class ast_func_def: public ast_node{
     public:
-    //function protype - contains name and return type info
+    /**
+    * @brief Uptr to the function prototype
+    * 
+    */
     std::unique_ptr<ast_func_proto> func_proto;
-    //the function body - expression or func block
+    /**
+     * @brief Uptr to the function body
+     * 
+     */
     std::unique_ptr<ast_node> func_body;
 
+    /**
+     * @brief Constructor
+     * 
+     * @param func_proto_ Uptr to the function prototype
+     * @param func_body_ Uptr to the function body as a node
+     */
     ast_func_def(std::unique_ptr<ast_func_proto>& func_proto_, std::unique_ptr<ast_node>& func_body_);
+
+    /**
+     * @brief Constructor
+     * 
+     * @param func_proto_ Uptr to the function prototype
+     * @param func_body_ Uptr to the function body as a function block
+     */
     ast_func_def(std::unique_ptr<ast_func_proto>& func_proto_, std::unique_ptr<ast_func_block>& func_body_);
-    //ast_func_def(std::unique_ptr<ast_func_proto>& func_proto_);
     virtual ~ast_func_def();
 
     llvm::Function* gen_code();

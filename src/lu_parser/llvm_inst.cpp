@@ -1,3 +1,14 @@
+/**
+ * @file llvm_inst.cpp
+ * @author Xavier Maruff (xavier.maruff@outlook.com)
+ * @brief Contains the LLVM instance definitions
+ * @version 0.1
+ * @date 2021-08-23
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
+
 #include "llvm_inst.hpp"
 
 //instantiate the llvm globals

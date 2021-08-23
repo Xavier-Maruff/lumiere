@@ -1,3 +1,14 @@
+/**
+ * @file ast.cpp
+ * @author Xavier Maruff (xavier.maruff@outlook.com)
+ * @brief Contains the AST definitions
+ * @version 0.1
+ * @date 2021-08-23
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
+
 #include <llvm/ADT/APFloat.h>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/STLExtras.h>
@@ -59,13 +70,6 @@ void ast_expr::set_init_val(std::unique_ptr<ast_expr>& start_expr){
 ast_expr::~ast_expr() {
     //
 }
-
-//TODO: remove all the get_expr_type methods, theyre DUMB and REDUNDANT and EW and WHY
-std::string ast_expr::get_expr_type() {
-    return "expr";
-}
-
-
 
 //ast variable expression
 ast_var_expr::ast_var_expr() :
@@ -229,9 +233,7 @@ llvm::Value* ast_var_expr::gen_code(){
     return llvm_irbuilder->CreateLoad(var_type, ret_val, name.c_str());
 }
 
-std::string ast_var_expr::get_expr_type() {
-    return "var";
-}
+
 
 
 //ast float expression (but its a double)
@@ -253,9 +255,7 @@ llvm::Value* ast_flt_expr::gen_code() {
     return llvm::ConstantFP::get(*llvm_context, llvm::APFloat(value));
 }
 
-std::string ast_flt_expr::get_expr_type() {
-    return "float";
-}
+
 
 
 //ast integer expression
@@ -277,9 +277,7 @@ llvm::Value* ast_int_expr::gen_code() {
     return llvm::ConstantInt::get(*llvm_context, llvm::APInt(64, value, true));
 }
 
-std::string ast_int_expr::get_expr_type() {
-    return "int";
-}
+
 
 
 //ast statement block
@@ -331,9 +329,7 @@ llvm::Value* ast_string_expr::gen_code() {
     return llvm_irbuilder->CreateGlobalStringPtr(llvm::StringRef(value));
 }
 
-std::string ast_string_expr::get_expr_type() {
-    return "string";
-}
+
 
 
 
@@ -382,9 +378,9 @@ llvm::Value* ast_bin_expr::gen_code() {
     }
 
     //get the iterator pointing to the function that will produce the correct value pointer
-    auto code_gen_func_iter = bin_oper_reduce_func_map.find({ lhs->cmp_node_type, opcode, rhs->cmp_node_type });
+    auto code_gen_func_iter = bin_oper_reduce_map.find({ lhs->cmp_node_type, opcode, rhs->cmp_node_type });
     //check if the operation is valid
-    if (code_gen_func_iter == bin_oper_reduce_func_map.end()) {
+    if (code_gen_func_iter == bin_oper_reduce_map.end()) {
         //No valid operation for the two adjacent nodes
         log_err()  << "No " << get_string_bin_oper(opcode) << " operation for nodes "
             << lhs->cmp_node_type << " (" << lhs->name << "), "
@@ -403,9 +399,7 @@ llvm::Value* ast_bin_expr::gen_code() {
     return code_gen_func->operator()(lhs_val, rhs_val);
 }
 
-std::string ast_bin_expr::get_expr_type() {
-    return "binary";
-}
+
 
 
 ast_unary_expr::ast_unary_expr(unary_oper opcode_, std::unique_ptr<ast_expr>& target_):
@@ -417,9 +411,7 @@ ast_unary_expr::~ast_unary_expr(){
     //
 }
 
-std::string ast_unary_expr::get_expr_type(){
-    return "unary";
-}
+
 
 llvm::Value* ast_unary_expr::gen_code() {
     //get the value of the two adjacent nodes
@@ -427,9 +419,9 @@ llvm::Value* ast_unary_expr::gen_code() {
     if (target_val == nullptr) return nullptr;
 
     //get the iterator pointing to the function that will produce the correct value pointer
-    auto code_gen_func_iter = unary_oper_reduce_func_map.find({opcode, target->cmp_node_type});
+    auto code_gen_func_iter = unary_oper_reduce_map.find({opcode, target->cmp_node_type});
     //check if the operation is valid
-    if (code_gen_func_iter == unary_oper_reduce_func_map.end()) {
+    if (code_gen_func_iter == unary_oper_reduce_map.end()) {
         //No valid operation for the two adjacent nodes
         log_err()  << "No " << get_string_unary_oper(opcode) << " operation for node "
             << target->cmp_node_type << std::endl;
@@ -485,13 +477,6 @@ llvm::Value* ast_func_call_expr::gen_code() {
     if(symbol_type_map[callee] == "void") return llvm_irbuilder->CreateCall(f_callee, arg_values);
     else return llvm_irbuilder->CreateCall(f_callee, arg_values, "calltmp");
 }
-
-std::string ast_func_call_expr::get_expr_type() {
-    std::string proto_return_type = symbol_type_map[callee];
-    if (proto_return_type == std::string()) return "unknown";
-    else return proto_return_type;
-}
-
 
 
 //function prototype

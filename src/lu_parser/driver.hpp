@@ -1,6 +1,17 @@
 #ifndef LUMIERE_PARSER_DRIVER
 #define LUMIERE_PARSER_DRIVER
 
+/**
+ * @file driver.hpp
+ * @author Xavier Maruff (xavier.maruff@outlook.com)
+ * @brief Contains the lumiere driver declaration
+ * @version 0.1
+ * @date 2021-08-23
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
+
 #include <string>
 
 #include "bison.hpp"
@@ -8,28 +19,61 @@
 #define YY_DECL yy::parser::symbol_type yylex(parser_driver& lu_driver)
 YY_DECL;
 
-//drives the parser
+/**
+ * @brief Drives the lumiere parser
+ * 
+ */
 class parser_driver{
     public:
-    //parser location
+    /**
+     * @brief Current location in the source file
+     * 
+     */
     yy::location loc;
-    //input filename
+    /**
+     * @brief Source file filename
+     * 
+     */
     std::string filename;
-    //verbose mode
+    /**
+     * @brief Logging verbosity
+     * 
+     */
     bool is_verbose;
-    //if repl, no file will be loaded - bison will read from stdin
+    /**
+     * @brief If true, input will be read from the stdin
+     * 
+     */
     bool is_repl;
 
     parser_driver(bool is_repl_ = false, bool is_verbose_ = false);
     virtual ~parser_driver();
 
-    //load a file to parse
+    /**
+     * @brief Load a file to parse
+     * 
+     * @param filename_ The path to the file to parse
+     */
     void load_file(std::string filename_);
-    //parse loaded file
+   
+    /**
+     * @brief Parse the loaded file
+     * 
+     */
     void parse();
-    //get the generated ir as a string - probably should improve this a bit
+    
+    /**
+     * @brief Get the LLVM IR as a string
+     * 
+     * @return std::string The IR
+     */
     std::string get_ir();
-    //write the generated ir the the output file
+    
+    /**
+     * @brief Write the LLVM IR to the output file
+     * 
+     * @param output_filename The path to the output file
+     */
     void write_ir(std::string output_filename);;
 
 };

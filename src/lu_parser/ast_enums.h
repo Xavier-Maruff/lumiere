@@ -1,7 +1,22 @@
 #ifndef LUMIERE_PARSER_AST_ENUMS
 #define LUMIERE_PARSER_AST_ENUMS
 
-//binary expression operator types
+/**
+ * @file ast_enums.h
+ * @author Xavier Maruff (xavier.maruff@outlook.com)
+ * @brief Contains the AST enum declarations
+ * @version 0.1
+ * @date 2021-08-23
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
+
+
+/**
+ * @brief Binary operation code enum
+ * 
+ */
 enum bin_oper {
     OPER_ADD,
     OPER_MULT,
@@ -11,12 +26,18 @@ enum bin_oper {
     OPER_ASSIGN
 };
 
-//unary expression operator types
+/**
+ * @brief Unary operation code enum
+ * 
+ */
 enum unary_oper {
     U_OPER_NEG
 };
 
-//expression ast node types
+/**
+ * @brief Expression node type enum
+ * 
+ */
 enum expr_node_type {
     BASE_EXPR_NODE,
     VAR_EXPR_NODE,

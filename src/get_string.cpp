@@ -1,3 +1,14 @@
+/**
+ * @file get_string.cpp
+ * @author Xavier Maruff (xavier.maruff@outlook.com)
+ * @brief get_string function definitions
+ * @version 0.1
+ * @date 2021-08-23
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
+
 #include "get_string.hpp"
 
 std::string get_string_expr_node_type(expr_node_type expr_node){

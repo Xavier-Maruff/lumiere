@@ -1,3 +1,14 @@
+/**
+ * @file log.cpp
+ * @author Xavier Maruff (xavier.maruff@outlook.com)
+ * @brief Logging definitions
+ * @version 0.1
+ * @date 2021-08-23
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
+
 #include "log.hpp"
 #include "colours.h"
 

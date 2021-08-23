@@ -1,3 +1,14 @@
+/**
+ * @file main.cpp
+ * @author Xavier Maruff (xavier.maruff@outlook.com)
+ * @brief Entry point to the lumiere compiler
+ * @version 0.1
+ * @date 2021-08-23
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
+
 #include <iostream>
 
 #include "driver.hpp"

@@ -11,4 +11,5 @@ module_context::~module_context(){
 
 llvm::Value* module_context::gen_code(){
     //TODO:
+    return nullptr;
 }
