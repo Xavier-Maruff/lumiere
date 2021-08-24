@@ -1,15 +1,14 @@
 # todo
-* Scoped variables
-* Fix strings
-* Fill out binary ops
+* Restructure function grammar
+* Fix global strings
 * Ternary ops? low priority
 * Booleans
 * Arrays
-* Struct
+* Structs
 * Anonymous functions
 * Custom types - tie in with structs
 * operator overloading
-* entry point? HOWW
+* Switch functions to variables
 
 ## Currently
 * Only compile time variables are supported
