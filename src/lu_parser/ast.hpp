@@ -267,13 +267,16 @@ class ast_string_expr: public ast_expr{
     ast_string_expr(std::string value_);
     virtual ~ast_string_expr();
 
+    llvm::Value* gen_code() override;
+
+    private:
     /**
      * @brief Replaces string special characters with the correct characters (ie \\n to newline)
      * 
      * @param value_ 
      */
-    static void replace_special_chars(std::string& value_);
-    llvm::Value* gen_code() override;
+    void replace_special_chars();
+    static std::map<char, std::string> special_char_map;
 
 };
 

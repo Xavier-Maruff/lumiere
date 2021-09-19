@@ -311,17 +311,46 @@ ast_string_expr::ast_string_expr() :
 
 ast_string_expr::ast_string_expr(std::string value_) :
     ast_expr(), value(value_) {
-    replace_special_chars(value);
+    replace_special_chars();
 }
 
 ast_string_expr::~ast_string_expr() {
     //
 }
 
-void ast_string_expr::replace_special_chars(std::string& value_){
-    //TODO: this is a REALLY bad way of doing this, rewrite it 
-    boost::replace_all(value_, "\\n", "\n");
-    boost::replace_all(value_, "\\r", "\r");
+//maps literal escaped characters to real escaped characters
+std::map<char, std::string> ast_string_expr::special_char_map = {
+    {'n', "\n"},
+    {'r', "\r"},
+    {'t', "\t"},
+    {'"', "\""},
+    {'\'', "\'"}
+};
+
+void ast_string_expr::replace_special_chars(){
+    //NOTE: 92 is ascii code for \, easier than writing messy multiple backslashes
+    auto backslash_iter = std::find(value.begin(), value.end(), 92);
+    //iterate over \ indices, escape subsequent character if in special_char_map
+    while(backslash_iter != value.end()){
+        size_t next_char_index = backslash_iter - value.begin() + 1;
+        if(value[next_char_index] != 92){
+            auto special_char_iter = special_char_map.find(value[next_char_index]);
+            if(special_char_iter == special_char_map.end()){
+                log_err() << "Invalid escaped character in string literal at position " << next_char_index
+                << " (\"" << value[next_char_index] << "\")" << std::endl;
+                throw PARSE_ERR;
+            }
+            else value.replace(next_char_index-1, 2, special_char_iter->second);
+        }
+        else {
+            //skip the next \ char
+            if(backslash_iter+1 == value.end()) break;
+            backslash_iter = std::find(backslash_iter+2, value.end(), 92);
+            continue;
+        }
+        //increment iter
+        backslash_iter = std::find(backslash_iter+1, value.end(), 92);
+    }
 }
 
 //get ref to string value
