@@ -1,0 +1,8 @@
+float glob = 10.0
+
+lambda void printf(string str...)
+lambda float get_glob() -> glob
+lambda void main() -> {
+    get_glob()
+    printf("test\n")
+}

@@ -25,6 +25,7 @@
 #include <llvm/IR/Verifier.h>
 
 #include <unordered_map>
+#include <boost/algorithm/string/replace.hpp>
 
 #include "ast.hpp"
 #include "log.hpp"
@@ -310,11 +311,17 @@ ast_string_expr::ast_string_expr() :
 
 ast_string_expr::ast_string_expr(std::string value_) :
     ast_expr(), value(value_) {
-    //
+    replace_special_chars(value);
 }
 
 ast_string_expr::~ast_string_expr() {
     //
+}
+
+void ast_string_expr::replace_special_chars(std::string& value_){
+    //TODO: this is a REALLY bad way of doing this, rewrite it 
+    boost::replace_all(value_, "\\n", "\n");
+    boost::replace_all(value_, "\\r", "\r");
 }
 
 //get ref to string value

@@ -46,8 +46,14 @@ void parser_driver::load_file(std::string filename_){
 //parse the file
 void parser_driver::parse(){
     DEBUG_LOG("Parsing "+filename);
-    if(!is_repl) yyin = fopen(filename.c_str(), "r");
-    else yyin = stdin;
+    if(!is_repl){
+        llvm_module = std::make_unique<llvm::Module>(filename, *llvm_context);
+        yyin = fopen(filename.c_str(), "r");
+    }
+    else{
+        llvm_module = std::make_unique<llvm::Module>("lumiere_repl", *llvm_context);
+        yyin = stdin;
+    }
     call_parse_from_flex(this);
     fclose(yyin);
     DEBUG_LOG("Finished parsing "+filename);

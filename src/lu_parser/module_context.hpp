@@ -19,6 +19,9 @@
 #include <vector>
 #include <memory>
 
+#include "llvm_inst.hpp"
+#include "cmp_time_extensible.hpp"
+
 class module_context {
     public:
 
