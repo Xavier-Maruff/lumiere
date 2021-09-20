@@ -14,12 +14,24 @@
 #define ANSI_GREEN "\033[32m"
 #define ANSI_YELLOW "\033[33m"
 
-float total_tests = 0;
-float total_passed = 0;
+//test generators
+#define double_test(x, args...)\
+push_string<double>(actual, x(args));\
+push_string<double>(expected, x##_check(args));
+
+#define string_test(x, y, args...)\
+actual.push_back(x(args));\
+expected.push_back(y);
+
+//test globals
+extern float total_tests;
+extern float total_passed;
+extern std::vector<std::string> expected;
+extern std::vector<std::string> actual;
 
 std::string passed, failed;
 
-//levenshtein distance
+//levenstein distance
 int lev_dist(std::string s1, std::string s2) {
     int i, j, t, track;
     const int l1 = s1.size();
@@ -43,8 +55,9 @@ int lev_dist(std::string s1, std::string s2) {
             dist[i][j] = std::min(t, (dist[i - 1][j - 1] + track));
         }
     }
-    return dist[l2][l1];
+    int ret = dist[l2][l1];
     delete[] dist;
+    return ret;
 }
 
 //check pass or fail

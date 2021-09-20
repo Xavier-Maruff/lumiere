@@ -52,7 +52,9 @@ entry:
 define double @ftest6(double %a) {
 entry:
   %glob = load double, double* @glob, align 8
-  ret double %glob
+  %addtmp = fadd double %glob, 2.000000e+00
+  %addtmp3 = fadd double %addtmp, -2.000000e+00
+  ret double %addtmp3
 }
 
 define double @ftest7(double %q) {

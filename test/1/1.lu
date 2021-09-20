@@ -17,12 +17,12 @@ lambda float ftest5(float a) -> {
 
 //check variable assignment, global load
 lambda float ftest6(float a) -> {
-    //float asd = 2.0
+    float asd = 2.0+glob
     //float zxcv
     //zxcv = glob
     //asd = zxcv
     //return asd
-    return glob
+    return asd-2.0
 }
 
 //check expression grouping, global assignment

@@ -34,6 +34,12 @@ double ftest7_check(double a) { return (a+2.0)*3.0; }
 double ftest8_check() { return 10.0; }
 double ftest9_check() { return 1.0; }
 
+
+std::vector<std::string> expected = {};
+std::vector<std::string> actual = {};
+float total_tests = 0;
+float total_passed = 0;
+
 //Run funcs, check match
 void print_char_ptr(const char* str){
     std::cout << str << std::endl;
@@ -43,61 +49,31 @@ void print_char_ptr(const char* str){
 int main(int argc, char* argv[]) {
     setup_ansi();
 
-    std::vector<std::string> expected = {};
-    std::vector<std::string> actual = {};
-
     //run tests
     //double tests
-    push_string<double>(actual, ftest1(1.0));
-    push_string<double>(actual, ftest1(-1.0));
-    push_string<double>(actual, ftest2(1.0));
-    push_string<double>(actual, ftest2(-1.0));
-    push_string<double>(actual, ftest3(1.0));
-    push_string<double>(actual, ftest3(-1.0));
-    push_string<double>(actual, ftest4(3.0, 4.0, 5));
-    push_string<double>(actual, ftest4(-3.0, -4.0, -5));
-    push_string<double>(actual, ftest5(1.0));
-    push_string<double>(actual, ftest5(-1.0));
-    push_string<double>(actual, ftest6(1.0));
-    push_string<double>(actual, ftest6(-1.0));
-    push_string<double>(actual, ftest7(1.0));
-    push_string<double>(actual, ftest7(-1.0));
-    push_string<double>(actual, ftest7(12.56));
-    push_string<double>(actual, ftest7(-12.56));
-    push_string<double>(actual, ftest8());
-    push_string<double>(actual, ftest9());
+    double_test(ftest1, 1.0);
+    double_test(ftest1, -1.0);
+    double_test(ftest2, 1.0);
+    double_test(ftest2, -1.0);
+    double_test(ftest3, 1.0);
+    double_test(ftest3, -1.0);
+    double_test(ftest4, 3.0, 4.0, 5);
+    double_test(ftest4, -3.0, -4.0, -5);
+    double_test(ftest5, 1.0);
+    double_test(ftest5, -1.0);
+    double_test(ftest6, 1.0);
+    double_test(ftest6, -1.0);
+    double_test(ftest7, 1.0);
+    double_test(ftest7, -1.0);
+    double_test(ftest7, 12.56);
+    double_test(ftest7, -12.56);
+    double_test(ftest8);
+    double_test(ftest9);
 
-    //string tests
-    actual.emplace_back(stest1("test"));
-    actual.emplace_back(stest2());
-    actual.emplace_back(stest3());
-    actual.emplace_back(stest4());
-
-    //sources of truth
-    //double truths
-    push_string<double>(expected, ftest1_check(1.0));
-    push_string<double>(expected, ftest1_check(-1.0));
-    push_string<double>(expected, ftest2_check(1.0));
-    push_string<double>(expected, ftest2_check(-1.0));
-    push_string<double>(expected, ftest3_check(1.0));
-    push_string<double>(expected, ftest3_check(-1.0));
-    push_string<double>(expected, ftest4_check(3.0, 4.0, 5));
-    push_string<double>(expected, ftest4_check(-3.0, -4.0, -5));
-    push_string<double>(expected, ftest5_check(1.0));
-    push_string<double>(expected, ftest5_check(-1.0));
-    push_string<double>(expected, ftest6_check(1.0));
-    push_string<double>(expected, ftest6_check(-1.0));
-    push_string<double>(expected, ftest7_check(1.0));
-    push_string<double>(expected, ftest7_check(-1.0));
-    push_string<double>(expected, ftest7_check(12.56));
-    push_string<double>(expected, ftest7_check(-12.56));
-    push_string<double>(expected, ftest8_check());
-    push_string<double>(expected, ftest9_check());
-    //string truths
-    expected.push_back("test");
-    expected.push_back("my name jeff");
-    expected.push_back("my name jeff");
-    expected.push_back("test");
+    string_test(stest1, "test", "test");
+    string_test(stest2, "my name jeff");
+    string_test(stest3, "my name jeff");
+    string_test(stest4, "test");
 
 
     std::cout << std::endl << "\tTest Results" << std::endl;

@@ -1,5 +1,4 @@
 # todo
-* Restructure function grammar
 * Fix global strings
 * Ternary ops? low priority
 * Booleans
