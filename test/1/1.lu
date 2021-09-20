@@ -1,4 +1,7 @@
 float glob = 10.0
+
+lambda void printf(string str...)
+
 //string glob_s = "globs"
 lambda float ftest1(float a...) -> -a*2.0+12.0
 lambda float ftest2(float a) -> a*2.0+-3.0/2.0
@@ -14,11 +17,12 @@ lambda float ftest5(float a) -> {
 
 //check variable assignment, global load
 lambda float ftest6(float a) -> {
-    float asd = 2.0
-    float zxcv
-    zxcv = glob
-    asd = zxcv
-    return asd
+    //float asd = 2.0
+    //float zxcv
+    //zxcv = glob
+    //asd = zxcv
+    //return asd
+    return glob
 }
 
 //check expression grouping, global assignment
@@ -29,17 +33,23 @@ lambda float ftest7(float q) -> {
 
 lambda void qwerrewq() -> {
     glob = glob+1
+    //for some reason this binexpr is not resulting in any codegen??????
     glob = glob-1
 }
 
 //check global mutability
 lambda float ftest8() -> {
+    //printf("pre ftest8 glob: %f\n", glob)
     qwerrewq()
+    //printf("ftest8 glob: %f\n", glob)
     return glob
 }
 
 //check global no init val
-lambda float ftest9() -> glob/10
+lambda float ftest9() -> {
+    //printf("pre ftest9 glob: %f\n", glob)
+    return glob/10
+}
 
 //string tests
 lambda string stest1(string a) -> a

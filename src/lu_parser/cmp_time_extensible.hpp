@@ -256,6 +256,13 @@ extern std::map<std::string, llvm::Value*> global_symbol_map;
 extern std::map<std::string, std::string> global_symbol_type_map;
 
 /**
+ * @brief Maps named to variable loads
+ * 
+ */
+extern std::map<std::string, llvm::Value*> var_load_map;
+
+
+/**
  * @brief Set of symbols with a definition
  * 
  */

@@ -43,15 +43,28 @@ void parser_driver::load_file(std::string filename_){
     }
 }
 
+void parser_driver::init_llvm(std::string module_name){
+    //init llvm globals
+    llvm_module = std::make_unique<llvm::Module>(module_name, *llvm_context);
+    llvm_func_pass_man = std::make_unique<llvm::legacy::FunctionPassManager>(llvm_module.get());
+
+    //add optimization passes
+    llvm_func_pass_man->add(llvm::createInstructionCombiningPass());
+    llvm_func_pass_man->add(llvm::createReassociatePass());
+    llvm_func_pass_man->add(llvm::createGVNPass());
+    llvm_func_pass_man->add(llvm::createCFGSimplificationPass());
+    llvm_func_pass_man->doInitialization();
+}
+
 //parse the file
 void parser_driver::parse(){
     DEBUG_LOG("Parsing "+filename);
     if(!is_repl){
-        llvm_module = std::make_unique<llvm::Module>(filename, *llvm_context);
+        init_llvm(filename);
         yyin = fopen(filename.c_str(), "r");
     }
     else{
-        llvm_module = std::make_unique<llvm::Module>("lumiere_repl", *llvm_context);
+        init_llvm("lumiere_repl");
         yyin = stdin;
     }
     call_parse_from_flex(this);

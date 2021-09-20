@@ -76,6 +76,13 @@ class parser_driver{
      */
     void write_ir(std::string output_filename);;
 
+    private:
+    /**
+     * @brief Initialize the llvm globals
+     * 
+     */
+    void init_llvm(std::string module_name);
+
 };
 
 #endif

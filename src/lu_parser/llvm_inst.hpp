@@ -35,6 +35,7 @@
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
 #include "llvm/Transforms/Utils.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include <algorithm>
 #include <string>
 
@@ -55,6 +56,12 @@ extern std::unique_ptr<llvm::Module> llvm_module;
  * 
  */
 extern std::unique_ptr<llvm::IRBuilder<>> llvm_irbuilder;
+
+/**
+ * @brief Uptr to the llvm pass manager - TODO: migrate to updated pass manager
+ * 
+ */
+extern std::unique_ptr<llvm::legacy::FunctionPassManager> llvm_func_pass_man;
 
 /**
  * @brief Get the llvm type from a lumiere type

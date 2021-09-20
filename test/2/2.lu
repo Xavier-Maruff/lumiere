@@ -1,8 +1,12 @@
 float glob = 10.0
 
 lambda void printf(string str...)
+lambda void scanf(string str...)
+
 lambda float get_glob() -> glob
 lambda void main() -> {
-    get_glob()
-    printf("test\n")
+    int test_int = 3
+    printf("test: glob = %f\n", get_glob())
+    printf("test_int = %d\n", (test_int+2)*(test_int+2))
+    //printf("%f\n", (2*test_int)+(test_int*2))
 }

@@ -171,7 +171,6 @@ llvm::Value* ast_var_expr::gen_code(){
                 //declare and define global var
                 //get the initial value
                 ret_val = gen_global_def();
-                //maybe return retval here? TODO:
             }
         }
         else {
@@ -189,6 +188,16 @@ llvm::Value* ast_var_expr::gen_code(){
 
             declared_symbols.insert(name);
 
+            if(init_val != nullptr){
+                llvm::Value* init_val_gen = init_val->gen_code();
+                if(init_val_gen == nullptr) {
+                    log_err()  << "Nullptr initial value after codegen for var " << name << std::endl;
+                    throw PARSE_ERR;
+                }
+                llvm_irbuilder->CreateStore(init_val_gen, ret_val);
+                defined_symbols.insert(name);
+            }
+
             //maybe not, test
             return ret_val;
         }
@@ -203,6 +212,11 @@ llvm::Value* ast_var_expr::gen_code(){
         throw PARSE_ERR;
     }
 
+    if(var_load_map.find(name) != var_load_map.end()) {
+        log_info() << "Variable " << name << " already loaded in current scope" << std::endl;
+        return var_load_map[name];
+    }
+
     //var has already been declared, check if it has been defined
     if(defined_symbols.find(name) == defined_symbols.end() && !is_global) {
         //if not defined, store the initial value
@@ -214,8 +228,9 @@ llvm::Value* ast_var_expr::gen_code(){
             }
             llvm_irbuilder->CreateStore(init_val_gen, ret_val);
             defined_symbols.insert(name);
+            log_info() << "Created store for " << name << " init val" << std::endl;
         }
-        //else log_warn()  << "No init val provided for var " << name << std::endl;
+        else log_warn()  << "No init val provided for var " << name << std::endl;
     }
 
     //get the variable type information
@@ -231,7 +246,9 @@ llvm::Value* ast_var_expr::gen_code(){
     }
 
     //return the load instruction
-    return llvm_irbuilder->CreateLoad(var_type, ret_val, name.c_str());
+    ret_val = llvm_irbuilder->CreateLoad(var_type, ret_val, name.c_str());
+    if(!is_global) var_load_map[name] = ret_val;
+    return ret_val;
 }
 
 
@@ -395,7 +412,7 @@ llvm::Value* ast_bin_expr::gen_code() {
         // Assignment requires the LHS to be an identifier.
         ast_var_expr *lhs_raw = dynamic_cast<ast_var_expr*>(lhs.get());
         if(lhs_raw == nullptr){
-            log_err()  << "Only variables can be assigned to" << std::endl;
+            log_err()  << "Only variables can be assigned to, LHS of assignment is " << lhs->cmp_node_type << std::endl;
             throw PARSE_ERR;
         }
         lhs_val = value_map[lhs_raw->name];
@@ -592,19 +609,20 @@ llvm::Function* ast_func_def::gen_code() {
     llvm::BasicBlock* block_f = llvm::BasicBlock::Create(*llvm_context, "entry", llvm_f);
     llvm_irbuilder->SetInsertPoint(block_f);
 
-    //might do an outer join, then revert after
-    //value_map_buffer.clear();
-    //value_map_buffer = value_map;
     store_tables_to_buffer();
     std::vector<std::string> arg_types = func_args_type_map[func_proto->name];
     size_t arg_index = 0;
     for (auto& arg : llvm_f->args()) {
+        
         llvm::AllocaInst* arg_alloca = insert_alloca_at_entry(llvm_f, arg.getName(), arg_types[arg_index]);
         llvm_irbuilder->CreateStore(&arg, arg_alloca);
+        
         std::string arg_name(arg.getName());
         value_map[arg_name] = arg_alloca;
+
         declared_symbols.insert(arg_name);
         defined_symbols.insert(arg_name);
+        
         arg_index++;
     }
 
@@ -616,26 +634,23 @@ llvm::Function* ast_func_def::gen_code() {
             << ",  but returns " << func_body->cmp_node_type << std::endl;
     }
 
-    if (return_value != nullptr) {
+    if (return_value != nullptr || func_body->cmp_node_type == "void") {
         llvm_irbuilder->CreateRet(return_value);
         llvm::verifyFunction(*llvm_f);
-        load_tables_from_buffer();
-        //value_map = value_map_buffer;
-        //value_map_buffer.clear();
-        return llvm_f;
-    }
-    else if(func_body->cmp_node_type == "void"){
-        llvm_irbuilder->CreateRet(nullptr);
-        llvm::verifyFunction(*llvm_f);
+        llvm_func_pass_man->run(*llvm_f);
         load_tables_from_buffer();
         return llvm_f;
     }
+    //else if(func_body->cmp_node_type == "void"){
+    //    llvm_irbuilder->CreateRet(nullptr);
+    //    llvm::verifyFunction(*llvm_f);
+    //    load_tables_from_buffer();
+    //    return llvm_f;
+    //}
 
     log_err()  << "Func body gen code returned nullptr" << std::endl;
     llvm_f->eraseFromParent();
     load_tables_from_buffer();
-    //value_map = value_map_buffer;
-    //value_map_buffer.clear();
     return nullptr;
 
 }

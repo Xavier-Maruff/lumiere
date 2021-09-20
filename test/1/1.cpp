@@ -29,10 +29,10 @@ double ftest2_check(double a) { return a * 2.0 + -3.0 / 2.0; }
 double ftest3_check(double a) { return a - 12.0; }
 double ftest4_check(double a, double y, signed long p) { return a * p - p * y + a / -y; }
 double ftest5_check(double a) { return ftest1(ftest4(a, 1.123, 200))+12.0; }
-double ftest6_check(double a) {return 12.0;}
-double ftest7_check(double a) {return (a+2.0)*3.0;}
-double ftest8_check() {return 10.0;}
-double ftest9_check() {return 1.0;}
+double ftest6_check(double a) { return 12.0; }
+double ftest7_check(double a) { return (a+2.0)*3.0; }
+double ftest8_check() { return 10.0; }
+double ftest9_check() { return 1.0; }
 
 //Run funcs, check match
 void print_char_ptr(const char* str){

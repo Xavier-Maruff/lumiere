@@ -218,7 +218,7 @@ var_dec: IDENT IDENT %prec DECL_TOK{
                         node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
                         DEBUG_LOGL(@$, $1+" variable declaration "+$2+" loaded as "+symbol_type_map[$$->name]+", "+$$->name);
                 }
-        | IDENT IDENT ASSIGN expr{
+        | IDENT IDENT ASSIGN expr {
                 //DEBUG_LOGL(@$, "Assignment to new variable "+$2+" of type "+$1);
                 $$ = make_ast_var_expr_uptr($1, $2);
                 node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
@@ -326,24 +326,16 @@ expr: IDENT {
                 DEBUG_LOGL(@$, "Binary expression");
             }
     /*| var_dec ASSIGN expr {
-                DEBUG_LOGL(@$, "Assignment to new variable "+$1->name+" of type "+$1->cmp_node_type);
-                $1->set_init_val($3);
-                $$ = std::move($1);
+                DEBUG_LOGL(@$, "Assignment to mutable variable "+$1->name);
+                ast_expr_uptr var_ref = make_ast_var_expr_uptr($1->name);
+                $$ = make_ast_bin_expr_uptr(OPER_ASSIGN, var_ref, $3);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
             }*/
     | IDENT ASSIGN expr {
             DEBUG_LOGL(@$, "Assignment to mutable variable "+$1);
-            //auto symbol_iter = declared_symbols.find($1);
-            //auto symbol_type_iter = symbol_type_map.find($1);
-            //if(symbol_type_iter != symbol_type_map.end()){
-                ast_expr_uptr var_ref = make_ast_var_expr_uptr($1);
-                $$ = make_ast_bin_expr_uptr(OPER_ASSIGN, var_ref, $3);
-                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
-                DEBUG_LOGL(@$, "Binary expression");
-            //}
-            //else {
-            //    stdlog.err() << ANSI_CYAN << @$ << ANSI_RESET << "\t Assignment to undeclared variable " << $1 << std::endl;
-            //    throw PARSE_ERR;
-            //}
+            ast_expr_uptr var_ref = make_ast_var_expr_uptr($1);
+            $$ = make_ast_bin_expr_uptr(OPER_ASSIGN, var_ref, $3);
+            node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
         }
 	//function call
     | IDENT OPEN_PAREN lambda_args CLOSE_PAREN {

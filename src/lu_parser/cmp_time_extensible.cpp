@@ -203,6 +203,10 @@ std::set<std::string> defined_symbols_buffer = {};
 std::set<std::string> declared_symbols = {};
 std::set<std::string> declared_symbols_buffer = {};
 
+//variables that have been loaded
+std::map<std::string, llvm::Value*> var_load_map = {};
+std::map<std::string, llvm::Value*> var_load_map_buffer = {};
+
 
 //called when entering a deeper scope, so new variables within scope are removed
 void store_tables_to_buffer(){
@@ -211,6 +215,7 @@ void store_tables_to_buffer(){
     func_args_type_map_buffer = func_args_type_map;
     defined_symbols_buffer = defined_symbols;
     declared_symbols_buffer = declared_symbols;
+    var_load_map_buffer = var_load_map;
 }
 
 //sister function to store_tables_to_buffer, called going to a shallower scope
@@ -226,11 +231,14 @@ void load_tables_from_buffer(){
     defined_symbols = defined_symbols_buffer;
     declared_symbols = declared_symbols_buffer;
 
+    var_load_map = var_load_map_buffer;
+
     symbol_type_map_buffer.clear();
     value_map_buffer.clear();
     func_args_type_map_buffer.clear();
     defined_symbols_buffer.clear();
     declared_symbols_buffer.clear();
+    var_load_map_buffer.clear();
 }
 
 
