@@ -60,3 +60,9 @@ lambda string stest4() -> {
     qawsed = "test"
     return qawsed
 }
+
+lambda bool btest1(bool a) -> a
+lambda bool btest2(bool a) -> {
+    bool q = btest1(a)
+    return !q
+}

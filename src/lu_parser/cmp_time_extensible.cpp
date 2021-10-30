@@ -89,7 +89,8 @@ type_map_type type_map = {
     TYPE_MAP_ELEM("int", {return llvm::Type::getInt64Ty(ctx);}),
     TYPE_MAP_ELEM("string", {return llvm::Type::getInt8PtrTy(ctx);}),
     TYPE_MAP_ELEM("void", {return llvm::Type::getVoidTy(ctx);}),
-    TYPE_MAP_ELEM("int32", {return llvm::Type::getInt32Ty(ctx);})
+    TYPE_MAP_ELEM("int32", {return llvm::Type::getInt32Ty(ctx);}),
+    TYPE_MAP_ELEM("bool", {return llvm::Type::getInt1Ty(ctx);}),
 };
 
 
@@ -151,6 +152,7 @@ bin_oper_reduce_map_type bin_oper_reduce_map = {
         return llvm_irbuilder->CreateFDiv(lhs, rhs, "addtmp");
     }, "float"}},
 
+    //LHS = RHS
    {{"float", OPER_ASSIGN, "int"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
         return llvm_irbuilder->CreateStore(llvm_irbuilder->CreateSIToFP(rhs, type_map["float"](*llvm_context)), lhs);
     }, "float"}},
@@ -165,7 +167,10 @@ bin_oper_reduce_map_type bin_oper_reduce_map = {
     }, "float"}},
     {{"string", OPER_ASSIGN, "string"}, {[](llvm::Value* lhs, llvm::Value* rhs)-> llvm::Value* {
         return llvm_irbuilder->CreateStore(rhs, lhs);
-    }, "string"}}
+    }, "string"}},
+    {{"bool", OPER_ASSIGN, "bool"}, {[](llvm::Value* lhs, llvm::Value* rhs)-> llvm::Value* {
+        return llvm_irbuilder->CreateStore(rhs, lhs);
+    }, "bool"}},
 };
 
 //returns a function to generate IR for unary expression
@@ -175,7 +180,10 @@ unary_oper_reduce_map_type unary_oper_reduce_map = {
     }, "float"}},
     {{U_OPER_NEG, "int"}, {[](llvm::Value* target) -> llvm::Value* {
         return llvm_irbuilder->CreateNeg(target);
-    }, "int"}}
+    }, "int"}},
+    {{U_OPER_NOT, "bool"}, {[](llvm::Value* target) -> llvm::Value* {
+        return llvm_irbuilder->CreateNot(target);
+    }, "bool"}},
 };
 
 //stores the lumiere type of a symbol

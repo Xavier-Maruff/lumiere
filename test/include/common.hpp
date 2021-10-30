@@ -19,6 +19,10 @@
 push_string<double>(actual, x(args));\
 push_string<double>(expected, x##_check(args));
 
+#define bool_test(x, args...)\
+push_string<bool>(actual, x(args));\
+push_string<bool>(expected, x##_check(args));
+
 #define string_test(x, y, args...)\
 actual.push_back(x(args));\
 expected.push_back(y);
@@ -66,7 +70,7 @@ std::string check_res(std::string actual, std::string expected) {
     std::stringstream lev_dist_stream;
     lev_dist_stream << std::setfill('0') << std::setw(3) << lev_dist_cmp;
     total_tests++;
-    if (actual == expected || lev_dist_cmp <= (actual.size()/3)) {
+    if (actual == expected || lev_dist_cmp <= 1) {
         total_passed++;
         return passed + " | " + lev_dist_stream.str() + (actual == expected ? "" : " (within bounds: " + expected + ", " + actual + ")");
     }

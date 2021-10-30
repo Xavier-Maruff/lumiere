@@ -107,3 +107,15 @@ define i8* @stest4() {
 entry:
   ret i8* getelementptr inbounds ([5 x i8], [5 x i8]* @2, i64 0, i64 0)
 }
+
+define i1 @btest1(i1 %a) {
+entry:
+  ret i1 %a
+}
+
+define i1 @btest2(i1 %a) {
+entry:
+  %calltmp = call i1 @btest1(i1 %a)
+  %0 = xor i1 %calltmp, true
+  ret i1 %0
+}

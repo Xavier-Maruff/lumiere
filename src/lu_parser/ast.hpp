@@ -246,6 +246,16 @@ class ast_int_expr: public ast_expr{
 
 };
 
+class ast_bool_expr: public ast_expr{
+    public:
+    bool value;
+
+    ast_bool_expr();
+    ast_bool_expr(bool value_);
+    virtual ~ast_bool_expr();
+    llvm::Value* gen_code() override;
+};
+
 /**
  * @brief String expression node
  * 

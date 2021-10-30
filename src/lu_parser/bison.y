@@ -26,6 +26,7 @@
     using ast_flt_expr_uptr = std::unique_ptr<ast_flt_expr>;
     using ast_string_expr_uptr = std::unique_ptr<ast_string_expr>;
     using ast_bin_expr_uptr = std::unique_ptr<ast_bin_expr>;
+    using ast_bool_expr_uptr = std::unique_ptr<ast_bool_expr>;
     //using ast_lhs_ptr_bin_expr_uptr = std::unique_ptr<ast_lhs_ptr_bin_expr>;
     using ast_unary_expr_uptr = std::unique_ptr<ast_unary_expr>;
     using ast_var_expr_uptr = std::unique_ptr<ast_var_expr>;
@@ -48,6 +49,10 @@
 
     ast_expr_uptr make_ast_flt_expr_uptr(double value){
         return ast_flt_expr_uptr(new ast_flt_expr(value));
+    }
+
+    ast_expr_uptr make_ast_bool_expr_uptr(bool value){
+        return ast_bool_expr_uptr(new ast_bool_expr(value));
     }
 
     ast_expr_uptr make_ast_string_expr_uptr(std::string value){
@@ -127,10 +132,11 @@
 %token <int64_t> INT_LIT;
 %token <double> FLT_LIT;
 %token <std::string> STR_LIT;
+%token <bool> BOOL_LIT;
 %token <std::string> IDENT
 %token ADD "+" STAR "*" NEG "-" SLASH "/" MOD "%" OPEN_PAREN "(" CLOSE_PAREN ")"
 %token LAMBDA_KW "lambda" ASSIGN "=" EQUIV "==" COMMA "," ARROW "->" OPEN_BRACE "{"
-%token CLOSE_BRACE "}" RETURN_KW "return" ELLIPS "..."
+%token CLOSE_BRACE "}" RETURN_KW "return" ELLIPS "..." NOT "!"
 
 %type <ast_expr_uptr> expr;
 %type <ast_func_proto_uptr> lambda_dec;
@@ -153,7 +159,7 @@
 %right ASSIGN
 %left ADD NEG
 %left STAR SLASH
-%nonassoc UNEG
+%nonassoc UNEG UNOT
 %nonassoc EXPR_GROUP
 %nonassoc DECL_TOK
 
@@ -294,6 +300,11 @@ expr: IDENT {
                 node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
                 $$->cmp_node_type = "float";
             }
+    | BOOL_LIT {
+                $$ = make_ast_bool_expr_uptr($1);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
+                $$->cmp_node_type = "bool";
+            }
     | STR_LIT {
                 $$ = make_ast_string_expr_uptr($1);
                 node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
@@ -302,6 +313,11 @@ expr: IDENT {
     | NEG expr %prec UNEG {
         DEBUG_LOGL(@$, "Unary expression with target type "+$2->cmp_node_type);
         $$ = make_ast_unary_expr_uptr(U_OPER_NEG, $2);
+        node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
+    }
+    | NOT expr %prec UNOT {
+        DEBUG_LOGL(@$, "Unary expression with target type "+$2->cmp_node_type);
+        $$ = make_ast_unary_expr_uptr(U_OPER_NOT, $2);
         node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
     }
     //TODO: mod

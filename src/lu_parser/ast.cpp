@@ -154,12 +154,16 @@ llvm::Value* ast_var_expr::gen_code(){
     llvm::Value* ret_val = nullptr;
     llvm::BasicBlock* parent_b = llvm_irbuilder->GetInsertBlock();
 
+    bool global_symbol = global_symbols.find(name) != global_symbols.end();
+    bool declared_symbol = declared_symbols.find(name) != declared_symbols.end();
+    bool defined_symbol = defined_symbols.find(name) != defined_symbols.end();
+
     //var needs to be declared
-    if(declared_symbols.find(name) == declared_symbols.end()){
+    if(!declared_symbol){
         //create the var declaration
         //block is nullptr or global explicitly stated, must be a global var
         //llvm say globals vars MUST be assigned at declaration
-        if(parent_b == nullptr || global_symbols.find(name) != global_symbols.end()){
+        if(parent_b == nullptr || global_symbol){
             is_global = true;
             global_symbols.insert(name);
             if(init_val == nullptr){
@@ -187,6 +191,7 @@ llvm::Value* ast_var_expr::gen_code(){
             ret_val = var_alloca;
 
             declared_symbols.insert(name);
+            declared_symbol = true;
 
             if(init_val != nullptr){
                 llvm::Value* init_val_gen = init_val->gen_code();
@@ -196,6 +201,7 @@ llvm::Value* ast_var_expr::gen_code(){
                 }
                 llvm_irbuilder->CreateStore(init_val_gen, ret_val);
                 defined_symbols.insert(name);
+                defined_symbol = true;
             }
 
             //maybe not, test
@@ -204,7 +210,7 @@ llvm::Value* ast_var_expr::gen_code(){
     }
 
     //check that there is a valid value
-    if(global_symbols.find(name) != global_symbols.end()) ret_val = global_symbol_map[name];
+    if(global_symbol) ret_val = global_symbol_map[name];
     else ret_val = value_map[name];
 
     if(ret_val == nullptr){
@@ -218,7 +224,8 @@ llvm::Value* ast_var_expr::gen_code(){
     }
 
     //var has already been declared, check if it has been defined
-    if(defined_symbols.find(name) == defined_symbols.end() && !is_global) {
+    //if(defined_symbols.find(name) == defined_symbols.end() && !is_global) {
+    if(!defined_symbol && !is_global){
         //if not defined, store the initial value
         if(init_val != nullptr){
             llvm::Value* init_val_gen = init_val->gen_code();
@@ -295,6 +302,25 @@ llvm::Value* ast_int_expr::gen_code() {
     return llvm::ConstantInt::get(*llvm_context, llvm::APInt(64, value, true));
 }
 
+
+//ast bool expression
+ast_bool_expr::ast_bool_expr():
+    ast_expr(), value(false) {
+    cmp_node_type = "bool";
+}
+
+ast_bool_expr::ast_bool_expr(bool value_) :
+    ast_expr(), value(value_) {
+    //
+}
+
+ast_bool_expr::~ast_bool_expr() {
+    //
+}
+
+llvm::Value* ast_bool_expr::gen_code() {
+    return llvm::ConstantInt::get(*llvm_context, llvm::APInt(1, value, true));
+}
 
 
 

@@ -31,7 +31,8 @@ enum bin_oper {
  * 
  */
 enum unary_oper {
-    U_OPER_NEG
+    U_OPER_NEG,
+    U_OPER_NOT
 };
 
 /**

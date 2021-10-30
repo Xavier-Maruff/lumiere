@@ -20,6 +20,9 @@ extern "C" {
     const char* stest2();
     const char* stest3();
     const char* stest4();
+
+    bool btest1(bool);
+    bool btest2(bool);
 }
 
 //Source of truth
@@ -33,6 +36,9 @@ double ftest6_check(double a) { return 12.0; }
 double ftest7_check(double a) { return (a+2.0)*3.0; }
 double ftest8_check() { return 10.0; }
 double ftest9_check() { return 1.0; }
+
+bool btest1_check(bool a) { return a; }
+bool btest2_check(bool a) { return !a; }
 
 
 std::vector<std::string> expected = {};
@@ -74,6 +80,9 @@ int main(int argc, char* argv[]) {
     string_test(stest2, "my name jeff");
     string_test(stest3, "my name jeff");
     string_test(stest4, "test");
+
+    bool_test(btest1, true);
+    bool_test(btest1, true);
 
 
     std::cout << std::endl << "\tTest Results" << std::endl;

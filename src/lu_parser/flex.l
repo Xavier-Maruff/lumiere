@@ -40,6 +40,12 @@ identifier [_a-zA-Z][_a-zA-Z0-9]*
                         else yytext_str = "";
                         return yy::parser::make_STR_LIT(yytext_str, loc);
                     }
+"true"              {
+                        return yy::parser::make_BOOL_LIT(true, loc);
+                    }
+"false"             {
+                        return yy::parser::make_BOOL_LIT(false, loc);
+                    }
 "lambda"            {
                         //store_symbol_type_map_to_buffer();
                         return yy::parser::make_LAMBDA_KW(loc);
@@ -53,6 +59,7 @@ identifier [_a-zA-Z][_a-zA-Z0-9]*
 "+"                 return yy::parser::make_ADD(loc);
 "=="                return yy::parser::make_EQUIV(loc);
 "="                 return yy::parser::make_ASSIGN(loc);
+"!"                 return yy::parser::make_NOT(loc);
 ","                 return yy::parser::make_COMMA(loc);
 "->"                return yy::parser::make_ARROW(loc);
 "-"                 return yy::parser::make_NEG(loc);
