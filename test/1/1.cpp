@@ -38,7 +38,7 @@ double ftest8_check() { return 10.0; }
 double ftest9_check() { return 1.0; }
 
 bool btest1_check(bool a) { return a; }
-bool btest2_check(bool a) { return !a; }
+bool btest2_check(bool a) { return false; }
 
 
 std::vector<std::string> expected = {};
@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
     string_test(stest4, "test");
 
     bool_test(btest1, true);
-    bool_test(btest1, true);
+    bool_test(btest2, false);
 
 
     std::cout << std::endl << "\tTest Results" << std::endl;

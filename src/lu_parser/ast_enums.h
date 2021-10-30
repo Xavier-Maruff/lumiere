@@ -23,7 +23,15 @@ enum bin_oper {
     OPER_SUB,
     OPER_DIV,
     OPER_MOD,
-    OPER_ASSIGN
+    OPER_ASSIGN,
+    OPER_EQ,
+    OPER_NEQ,
+    OPER_LESS,
+    OPER_LESS_EQ,
+    OPER_GREATER,
+    OPER_GREATER_EQ,
+    OPER_LOG_AND,
+    OPER_LOG_OR,
 };
 
 /**

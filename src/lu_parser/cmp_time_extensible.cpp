@@ -171,6 +171,38 @@ bin_oper_reduce_map_type bin_oper_reduce_map = {
     {{"bool", OPER_ASSIGN, "bool"}, {[](llvm::Value* lhs, llvm::Value* rhs)-> llvm::Value* {
         return llvm_irbuilder->CreateStore(rhs, lhs);
     }, "bool"}},
+
+    //LHS != RHS
+    {{"bool", OPER_NEQ, "int"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        return llvm_irbuilder->CreateICmpNE(lhs, rhs, "addtmp");
+    }, "bool"}},
+    {{"bool", OPER_NEQ, "float"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        return llvm_irbuilder->CreateFCmpONE(lhs, rhs, "addtmp");
+    }, "bool"}},
+    {{"bool", OPER_NEQ, "bool"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        return llvm_irbuilder->CreateICmpNE(lhs, rhs, "addtmp");
+    }, "bool"}},
+
+    //LHS == RHS
+    {{"bool", OPER_EQ, "int"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        return llvm_irbuilder->CreateICmpEQ(lhs, rhs, "addtmp");
+    }, "bool"}},
+    {{"bool", OPER_EQ, "float"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        return llvm_irbuilder->CreateFCmpOEQ(lhs, rhs, "addtmp");
+    }, "bool"}},
+    {{"bool", OPER_EQ, "bool"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        return llvm_irbuilder->CreateICmpEQ(lhs, rhs, "addtmp");
+    }, "bool"}},
+
+    //LHS || RHS
+    {{"bool", OPER_LOG_OR, "bool"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        return llvm_irbuilder->CreateOr(lhs, rhs, "addtmp");
+    }, "bool"}},
+
+    //LHS && RHS
+    {{"bool", OPER_LOG_AND, "bool"}, {[](llvm::Value* lhs, llvm::Value* rhs) -> llvm::Value* {
+        return llvm_irbuilder->CreateAnd(lhs, rhs, "addtmp");
+    }, "bool"}},
 };
 
 //returns a function to generate IR for unary expression

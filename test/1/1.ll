@@ -116,6 +116,5 @@ entry:
 define i1 @btest2(i1 %a) {
 entry:
   %calltmp = call i1 @btest1(i1 %a)
-  %0 = xor i1 %calltmp, true
-  ret i1 %0
+  ret i1 false
 }

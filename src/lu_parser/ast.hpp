@@ -246,11 +246,24 @@ class ast_int_expr: public ast_expr{
 
 };
 
+/**
+ * @brief Boolean (Int1) expression
+ * 
+ */
 class ast_bool_expr: public ast_expr{
     public:
+    /**
+     * @brief Expression boolean value
+     * 
+     */
     bool value;
 
     ast_bool_expr();
+    /**
+     * @brief Construct a new ast bool expr object
+     * 
+     * @param value_ the boolean value of the expression
+     */
     ast_bool_expr(bool value_);
     virtual ~ast_bool_expr();
     llvm::Value* gen_code() override;

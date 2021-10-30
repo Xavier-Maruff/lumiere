@@ -135,7 +135,8 @@
 %token <bool> BOOL_LIT;
 %token <std::string> IDENT
 %token ADD "+" STAR "*" NEG "-" SLASH "/" MOD "%" OPEN_PAREN "(" CLOSE_PAREN ")"
-%token LAMBDA_KW "lambda" ASSIGN "=" EQUIV "==" COMMA "," ARROW "->" OPEN_BRACE "{"
+%token LAMBDA_KW "lambda" ASSIGN "=" EQUIV "==" NOT_EQUIV "!="
+%token LOG_OR "||" LOG_AND "&&" COMMA "," ARROW "->" OPEN_BRACE "{"
 %token CLOSE_BRACE "}" RETURN_KW "return" ELLIPS "..." NOT "!"
 
 %type <ast_expr_uptr> expr;
@@ -157,7 +158,7 @@
 
 %right IDENT
 %right ASSIGN
-%left ADD NEG
+%left ADD NEG EQUIV NOT_EQUIV LOG_AND LOG_OR
 %left STAR SLASH
 %nonassoc UNEG UNOT
 %nonassoc EXPR_GROUP
@@ -331,6 +332,26 @@ expr: IDENT {
                 node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
                 DEBUG_LOGL(@$, "Binary expression");
             }
+    | expr LOG_AND expr {
+                $$ = make_ast_bin_expr_uptr(OPER_LOG_AND, $1, $3);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
+                DEBUG_LOGL(@$, "Binary expression");
+    }
+    | expr LOG_OR expr {
+                $$ = make_ast_bin_expr_uptr(OPER_LOG_OR, $1, $3);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
+                DEBUG_LOGL(@$, "Binary expression");
+    }
+    | expr EQUIV expr {
+                $$ = make_ast_bin_expr_uptr(OPER_EQ, $1, $3);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
+                DEBUG_LOGL(@$, "Binary expression");
+    }
+    | expr NOT_EQUIV expr {
+                $$ = make_ast_bin_expr_uptr(OPER_NEQ, $1, $3);
+                node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);
+                DEBUG_LOGL(@$, "Binary expression");
+    }
     | expr STAR expr {
                 $$ = make_ast_bin_expr_uptr(OPER_MULT, $1, $3);
                 node_id_source_info_map[$$->node_id] = error_loc_info(*@$.begin.filename, @$.begin.line, @$.begin.column, @$.end.line, @$.end.column);

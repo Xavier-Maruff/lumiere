@@ -57,6 +57,9 @@ identifier [_a-zA-Z][_a-zA-Z0-9]*
 "{"                 return yy::parser::make_OPEN_BRACE(loc);
 "}"                 return yy::parser::make_CLOSE_BRACE(loc);
 "+"                 return yy::parser::make_ADD(loc);
+"||"                return yy::parser::make_LOG_OR(loc); //from here
+"&&"                return yy::parser::make_LOG_AND(loc);
+"!="                return yy::parser::make_NOT_EQUIV(loc); // to here
 "=="                return yy::parser::make_EQUIV(loc);
 "="                 return yy::parser::make_ASSIGN(loc);
 "!"                 return yy::parser::make_NOT(loc);

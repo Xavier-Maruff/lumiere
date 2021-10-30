@@ -18,10 +18,6 @@ lambda float ftest5(float a) -> {
 //check variable assignment, global load
 lambda float ftest6(float a) -> {
     float asd = 2.0+glob
-    //float zxcv
-    //zxcv = glob
-    //asd = zxcv
-    //return asd
     return asd-2.0
 }
 
@@ -39,15 +35,12 @@ lambda void qwerrewq() -> {
 
 //check global mutability
 lambda float ftest8() -> {
-    //printf("pre ftest8 glob: %f\n", glob)
     qwerrewq()
-    //printf("ftest8 glob: %f\n", glob)
     return glob
 }
 
 //check global no init val
 lambda float ftest9() -> {
-    //printf("pre ftest9 glob: %f\n", glob)
     return glob/10
 }
 
@@ -64,5 +57,5 @@ lambda string stest4() -> {
 lambda bool btest1(bool a) -> a
 lambda bool btest2(bool a) -> {
     bool q = btest1(a)
-    return !q
+    return !q == q
 }
